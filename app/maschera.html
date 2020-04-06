@@ -86,24 +86,28 @@
     <form class="ui form">
       <div class="field">
         <label>Nome in italiano</label>
-        <input type="text" name="first-name" placeholder="First Name">
+        <input type="text" name="first-name" placeholder="Nome del bene">
       </div>
       <div class="field">
         <label>Descrizione in italiano</label>
-        <input type="text" name="last-name" placeholder="Last Name">
+        <input type="text" name="last-name" placeholder="Descrizione supersintetica del bene (e.g. museo di scienze)">
       </div>
       <div class="field">
         <label>Tipologia</label>
-        <input type="text" name="last-name" placeholder="Last Name">
+        <select class="ui fluid dropdown">
+          <option value="">Tipologia</option>
+          <option value="AL">museo</option>
+          <option value="AK">monumento</option>
+        </select>
       </div>
       <div class="field">
         <label>Comune</label>
-        <input type="text" name="last-name" placeholder="Last Name">
+        <input type="text" name="last-name" placeholder="Il Comune italiano presso cui si trova il bene">
       </div>
       <div class="field">
         <div id="mapid"></div>
         <label>Coordinate geografiche</label>
-        <input type="text" name="last-name" placeholder="Last Name">
+        <input id="coord" type="text" name="last-name" placeholder="Latitudine, Longitudine (clicca sulla mappa per fare in automatico)">
       </div>
       <div class="field">
         <label>Indirizzo stradale</label>
