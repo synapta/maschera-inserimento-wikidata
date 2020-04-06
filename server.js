@@ -4,8 +4,8 @@ const request   = require('request');
 const config    = {
     instance: 'https://www.wikidata.org/w/api.php',
     credentials: {
-      username: "GiulioCard",
-      password: "arpS2eOnVGhfwVzOPWmH",
+      username: "**********",
+      password: "**********",
       summary: "Test Edit with API"
     }
 }
@@ -15,6 +15,8 @@ const utils     = require('./utils');
 const app = express();
 
 app.use(morgan('common'));
+
+app.use('/',express.static('./app'));
 
 app.get('/api/suggestion/comune', function(req, res) {
     let matchComuni = utils.suggestComuni(req.query.q);
