@@ -18,6 +18,26 @@ app.use(morgan('common'));
 
 app.use('/',express.static('./app'));
 
+app.get('/login', function(req, res) {
+    res.sendFile(__dirname + '/app/login.html');
+});
+
+app.get('/ente', function(req, res) {
+    res.sendFile(__dirname + '/app/ente.html');
+});
+
+app.get('/upload', function(req, res) {
+    res.sendFile(__dirname + '/app/upload.html');
+});
+
+app.get('/monumenti', function(req, res) {
+    res.sendFile(__dirname + '/app/monumenti.html');
+});
+
+app.get('/maschera', function(req, res) {
+    res.sendFile(__dirname + '/app/maschera.html');
+});
+
 app.get('/api/suggestion/comune', function(req, res) {
     let matchComuni = utils.suggestComuni(req.query.q);
     res.status(200).send(matchComuni);
