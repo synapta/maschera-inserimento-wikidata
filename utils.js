@@ -54,7 +54,6 @@ exports.sparqlQueryMonuments = function(id) {
 
 exports.suggestComuni = function(query, cb) {
     if (query.length > 1) {
-      console.log(COMUNI_ARR)
         //return COMUNI_NOMI.filter(c => c.toLowerCase().startsWith(query.toLowerCase()));
         return { "items" : COMUNI_ARR.filter(function (el) {
           return el.title.toLowerCase().includes(query.toLowerCase());

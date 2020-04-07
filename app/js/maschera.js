@@ -1,7 +1,10 @@
-let mainObject = {};
+let mainObject = { "entity": {} };
+mainObject.entity.claims = {};
 
 const url = new URL(window.location.href);
 const id = url.searchParams.get("id");
+
+mainObject.entity.id = id;
 
 $.ajax({
     type: "GET",
@@ -49,39 +52,59 @@ $.ajax({
 document.getElementById("sendMaschera").addEventListener("click", function () {
   let label = $("input[name=label]").val();
   if (label) {
-      mainObject.label = label;
+      mainObject.entity.label = label;
   }
 
   let descrizione = $("input[name=descrizione]").val();
   if (descrizione) {
-      mainObject.descrizione = descrizione;
+      mainObject.entity.description = descrizione;
   }
 
-  let tipologia = $("input[name=tipologia]").val();
+  /*let tipologia = $("input[name=tipologia]").val();
   if (tipologia) {
-      mainObject.P31 = tipologia;
-  }
+      mainObject.entity.claims.P31 = tipologia;
+  }*/
 
+  mainObject.entity.claims.P17 = "Q38";
   let comune = $('.ui.search').search('get result', $("input[name=comune]").val());
   if (comune) {
-      mainObject.P131 = comune.id;
+      mainObject.entity.claims.P131 = comune.id;
   }
 
   let lat = $("input[name=lat]").val();
   let long = $("input[name=long]").val();
   if (lat && long) {
-      mainObject.P625 = `Point(${lat}, ${long})`
+      mainObject.entity.claims.P625 = {};
+      mainObject.entity.claims.P625.latitude = parseFloat(lat);
+      mainObject.entity.claims.P625.longitude = parseFloat(long);
+      mainObject.entity.claims.P625.precision = 0.0001;
   }
 
   let indirizzo = $("input[name=indirizzo]").val();
   if (indirizzo) {
-      mainObject.P6375 = indirizzo;
+      mainObject.entity.P6375 = {};
+      mainObject.entity.P6375.text = indirizzo;
+      mainObject.entity.P6375.language = "it";
   }
 
   let website = $("input[name=sito-web]").val();
   if (website) {
-      mainObject.P856 = website;
+      mainObject.entity.P856 = website;
   }
 
   console.log(mainObject);
+
+  $.ajax({
+      type: "POST",
+      url: `/api/entity/edit`,
+      contentType: 'application/json',
+      dataType: 'json',
+      data: JSON.stringify(mainObject),
+      success: function(data) {
+          alert("OK")
+      },
+      error: function(err) {
+          console.log(err)
+      }
+  });
 });

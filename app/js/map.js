@@ -12,8 +12,8 @@ mymap.on('click', function(ev){
   let currentClickCount = clickedOnMap;
   var latlng = mymap.mouseEventToLatLng(ev.originalEvent);
   //console.log(latlng.lat + ', ' + latlng.lng);
-  $("#coordLat").val(latlng.lat);
-  $("#coordLng").val(latlng.lng);
+  $("#coordLat").val(latlng.lat.toFixed(4));
+  $("#coordLng").val(latlng.lng.toFixed(4));
 
   //code to get possible relation id from OSM
   /*setTimeout(function() {
