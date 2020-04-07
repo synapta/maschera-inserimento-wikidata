@@ -242,3 +242,25 @@ exports.editItem = function (object, updated) {
         });
     });
 }
+
+var simpleWikidataSuggestion = function(string, cb) {
+   let endpointWikidata = {
+       method: 'GET',
+       url: `https://www.wikidata.org/w/api.php?action=wbsearchentities&search=${string}&format=json&errorformat=plaintext&language=it&uselang=it&type=item`,
+       headers: {
+         'Accept': 'application/json',
+         'User-Agent': 'nodejs'
+       },
+       timeout: 120000
+   };
+
+   request(endpointWikidata, function(err, res, body) {
+       if (err) {
+           console.log("Error retrieving entity: \n\n", err);
+           cb();
+       } else {
+           cb(JSON.parse(body));
+       }
+   })
+}
+exports.simpleWikidataSuggestion = simpleWikidataSuggestion;

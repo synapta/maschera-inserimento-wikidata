@@ -110,6 +110,24 @@ app.get('/api/suggestion/comune', function (req, res) {
     res.status(200).send(matchComuni);
 });
 
+app.get('/api/suggestion/generic', function(req, res) {
+    utils.simpleWikidataSuggestion(req.query.q, function(result) {
+        if (result) {
+            if (result.error) {
+                res.status(404).send("Not Found");
+            } else {
+                result.search = result.search.filter(function (item) {
+                    delete item.url;
+                    return true;
+                });
+                res.status(200).send(result);
+            }
+        } else {
+            res.status(500).send("Error");
+        }
+    });
+});
+
 app.get('/api/query/comune', function (req, res) {
     utils.getQfromTitleWithFile(req.query.q, function (pageId) {
         if (pageId === undefined) {
