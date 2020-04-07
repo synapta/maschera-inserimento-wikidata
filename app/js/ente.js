@@ -11,11 +11,12 @@ $('.ui.search')
     onSelect: function(res, resp) {
         $.ajax({
             type: "GET",
-            url: `https://nominatim.openstreetmap.org/search.php?q=${res.title}, Italia&format=json`,
+            url: `/api/store/ente?id=${res.id}`,
             success: function(data){
-                console.log(data[0].lat, data[0].lon);
-                mymap.panTo(new L.LatLng(data[0].lat, data[0].lon));
-                mymap.setZoom(10);
+                window.location.href = "/upload"
+            },
+            error: function(data) {
+                window.location.href = "/login"
             }
         });
     }

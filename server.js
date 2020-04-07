@@ -114,7 +114,7 @@ app.get('/maschera', function (req, res) {
     res.sendFile(__dirname + '/app/maschera.html');
 });
 
-app.get('/api/account', ensureAuthenticated, function (req, res) {
+app.get('/api/account', function (req, res) {
     res.json({ user: req.user });
 });
 
@@ -129,9 +129,32 @@ app.post('/api/upload', async function (req, res) {
     }
 });
 
+app.get('/api/store/ente', function (req, res) {
+    req.session.ente = req.query.id;
+    res.status(200).send("saved");
+});
+
 app.get('/api/suggestion/comune', function (req, res) {
     let matchComuni = utils.suggestComuni(req.query.q);
     res.status(200).send(matchComuni);
+});
+
+app.get('/api/suggestion/generic', function(req, res) {
+    utils.simpleWikidataSuggestion(req.query.q, function(result) {
+        if (result) {
+            if (result.error) {
+                res.status(404).send("Not Found");
+            } else {
+                result.search = result.search.filter(function (item) {
+                    delete item.url;
+                    return true;
+                });
+                res.status(200).send(result);
+            }
+        } else {
+            res.status(500).send("Error");
+        }
+    });
 });
 
 app.get('/api/query/comune', function (req, res) {
