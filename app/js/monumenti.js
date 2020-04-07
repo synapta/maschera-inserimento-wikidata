@@ -14,3 +14,7 @@ $('.ui.search')
     }
   })
 ;
+
+$( "#addMonuButton" ).click(function() {
+    $("#fase2").show();
+});

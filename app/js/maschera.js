@@ -94,9 +94,14 @@ document.getElementById("sendMaschera").addEventListener("click", function () {
 
   console.log(mainObject);
 
+  let api = "/api/entity/edit";
+  if (!mainObject.entity.id) {
+      api = "/api/entity/create";
+  }
+
   $.ajax({
       type: "POST",
-      url: `/api/entity/edit`,
+      url: api,
       contentType: 'application/json',
       dataType: 'json',
       data: JSON.stringify(mainObject),

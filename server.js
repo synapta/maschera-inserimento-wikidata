@@ -30,6 +30,7 @@ passport.use(new MediaWikiStrategy({
                 token: token,
                 token_secret: tokenSecret
             };
+            profile.list = [];
             return done(null, profile);
         });
     }
@@ -130,7 +131,7 @@ app.post('/api/upload', async function (req, res) {
 });
 
 app.get('/api/store/ente', function (req, res) {
-    req.session.ente = req.query.id;
+    req.user.ente = req.query.id;
     res.status(200).send("saved");
 });
 
@@ -207,6 +208,7 @@ app.get('/api/entity/get', function (req, res) {
 });
 
 app.post('/api/entity/edit', function (req, res) {
+    req.user.list.push({'id':req.body.entity.id, 'label':req.body.entity.label});
     utils.editItem(req.body.entity, function (success) {
         if (success) {
             res.status(200).send("OK");
@@ -217,6 +219,7 @@ app.post('/api/entity/edit', function (req, res) {
 });
 
 app.post('/api/entity/create', function (req, res) {
+    req.user.list.push(req.body.entity.id);
     utils.createNewItem(req.body.entity, function (success) {
         if (success) {
             res.status(200).send("OK");
