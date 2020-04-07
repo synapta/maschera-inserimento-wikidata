@@ -20,7 +20,7 @@ passport.deserializeUser(function (obj, done) {
 passport.use(new MediaWikiStrategy({
     consumerKey: process.env.MEDIAWIKI_CONSUMER_KEY,
     consumerSecret: process.env.MEDIAWIKI_CONSUMER_SECRET,
-    baseURL: 'https://wiki.synapta.io/' // TODO
+    baseURL: 'https://www.wikidata.org/'
 },
     function (token, tokenSecret, profile, done) {
         process.nextTick(function () {
@@ -36,7 +36,7 @@ passport.use(new MediaWikiStrategy({
 ));
 
 const config = {
-    instance: 'https://www.wikidata.org/w/api.php',
+    instance: 'https://www.wikidata.org/w/api.php'
 }
 const wdEdit = require('wikibase-edit')(config);
 const utils = require('./utils');
@@ -68,10 +68,6 @@ function ensureAuthenticated(req, res, next) {
     }
     res.redirect('/login');
 }
-
-app.get('/account', ensureAuthenticated, function (req, res) {
-    res.json({ user: req.user });
-});
 
 app.get('/logout', function (req, res) {
     req.logout();
@@ -107,6 +103,10 @@ app.get('/monumenti', function (req, res) {
 
 app.get('/maschera', function (req, res) {
     res.sendFile(__dirname + '/app/maschera.html');
+});
+
+app.get('/api/account', ensureAuthenticated, function (req, res) {
+    res.json({ user: req.user });
 });
 
 app.post('/api/upload', async function (req, res) {
@@ -154,8 +154,8 @@ app.get('/api/query/comune', function (req, res) {
     })
 });
 
-app.get('/api/entity/get', function(req, res) {
-    utils.getItem(req.query.id, function(result) {
+app.get('/api/entity/get', function (req, res) {
+    utils.getItem(req.query.id, function (result) {
         if (result) {
             if (result.error) {
                 res.status(404).send("Not Found");
@@ -168,8 +168,8 @@ app.get('/api/entity/get', function(req, res) {
     });
 });
 
-app.post('/api/entity/edit', function(req, res) {
-    utils.editItem(req.body.entity, function(success) {
+app.post('/api/entity/edit', function (req, res) {
+    utils.editItem(req.body.entity, function (success) {
         if (success) {
             res.status(200).send("OK");
         } else {
@@ -178,8 +178,8 @@ app.post('/api/entity/edit', function(req, res) {
     });
 });
 
-app.post('/api/entity/create', function(req, res) {
-    utils.createNewItem(req.body.entity, function(success) {
+app.post('/api/entity/create', function (req, res) {
+    utils.createNewItem(req.body.entity, function (success) {
         if (success) {
             res.status(200).send("OK");
         } else {
@@ -188,7 +188,7 @@ app.post('/api/entity/create', function(req, res) {
     });
 });
 
-const server = app.listen(8080, function() {
+const server = app.listen(8080, function () {
     var host = server.address().address;
     var port = server.address().port;
     utils.parseComuniFile();
