@@ -60,6 +60,15 @@ app.use(passport.session());
 app.use(fileUpload());
 app.use(morgan('common'));
 app.use(bodyParser.json());
+
+// TODO remove when callback is set properly
+app.get('/', function (req, res, next) {
+    if (req.query.oauth_verifier && req.query.oauth_token) {
+        res.redirect('/auth/mediawiki/callback?oauth_verifier=' + req.query.oauth_verifier + '&oauth_token=' + req.query.oauth_token);
+    }
+    return next();
+});
+
 app.use('/', express.static('./app'));
 
 function ensureAuthenticated(req, res, next) {
