@@ -7,7 +7,7 @@ let COMUNI_NOMI;
 
 exports.parseComuniFile = function() {
     let comuni = {};
-    fs.readFileSync('comuni_italiani.csv', 'utf8').split("\n").forEach(function(line){
+    fs.readFileSync('assets/comuni_italiani.csv', 'utf8').split("\n").forEach(function(line){
         if (line === "") { return; }
         let parts = line.split(",");
         comuni[parts[1]]=parts[0];
@@ -45,7 +45,7 @@ exports.suggestComuni = function(query, cb) {
       console.log(COMUNI_ARR)
         //return COMUNI_NOMI.filter(c => c.toLowerCase().startsWith(query.toLowerCase()));
         return { "items" : COMUNI_ARR.filter(function (el) {
-          return el.title.toLowerCase().startsWith(query.toLowerCase());
+          return el.title.toLowerCase().includes(query.toLowerCase());
         }) }
     } else {
         return { "items" : [] };
