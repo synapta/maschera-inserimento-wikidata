@@ -226,7 +226,13 @@ app.post('/api/entity/create', function (req, res) {
     });
 });
 
-const server = app.listen(8080, function () {
+let port = 8080;
+
+if (process.argv.length > 2) {
+    port = parseInt(process.argv[2]);
+}
+
+const server = app.listen(port, function () {
     var host = server.address().address;
     var port = server.address().port;
     utils.parseComuniFile();
