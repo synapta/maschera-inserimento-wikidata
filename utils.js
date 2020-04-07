@@ -67,11 +67,7 @@ exports.getQfromTitleWithFile = function(title, cb) {
     cb(COMUNI_ID[title]);
 }
 
-exports.getTitleFromQWithFile = function(id, cb) {
-    cb(COMUNI_ARR.find(x => x.id === id));
-}
-
- var getItem = function(id, cb) {
+var getItem = function(id, cb) {
     let endpointWikidata = {
         method: 'GET',
         url: 'https://www.wikidata.org/w/api.php' + `?action=wbgetentities&format=json&ids=${id}&languages=it`,
@@ -193,6 +189,10 @@ function removeDuplicates(wdObj, obj, cb) {
     let currKey = 0;
     let newObj = {};
     for (var k in obj) {
+        if (k === 'P2186' && obj[k].value === undefined) {
+            currKey++;
+            continue;
+        }
         if (!Object.keys(wdObj).includes(k)) {
             newObj[k] = obj[k];
         } else {
@@ -206,6 +206,29 @@ function removeDuplicates(wdObj, obj, cb) {
     }
 }
 
+function createEmptyWlmIdOrSkip(object, cb) {
+    let wlmProp = object.claims.P2186;
+    if (wlmProp && wlmProp.qualifiers && wlmProp.qualifiers.P580 && wlmProp.value === undefined) {
+        console.log("Creating empty P2186 with date qualifier")
+        wbEdit.claim.create({
+          id: object.id,
+          property: 'P2186',
+          value: { snaktype: 'novalue' }
+        }).then(re => {
+            let claimId = re.claim.id;
+            wbEdit.qualifier.set({
+              guid: claimId,
+              property: 'P580',
+              value: wlmProp.qualifiers.P580
+          }).then(re => {
+              cb();
+          })
+        })
+    } else {
+        cb();
+    }
+}
+
 exports.editItem = function (object, updated) {
 
     getItem(object.id, function(wdObject) {
@@ -214,34 +237,39 @@ exports.editItem = function (object, updated) {
             return;
         }
 
+        console.log(JSON.stringify(object, null, 2))
+
         removeDuplicates(wdObject.entities[object.id].claims, object.claims, function (editObj) {
 
-            //let myClaims = prepareClaims(editObj)
+            createEmptyWlmIdOrSkip(object, function() {
 
-            if (Object.entries(editObj).length === 0 && editObj.constructor === Object) {
-                console.log("Skip! Everything already in!");
-                updated(true);
-                return
-            } else {
-                console.log("Updating...");
-                wbEdit.entity.edit({
-                  id: object.id,
-                  claims: editObj
-                }).then(re => {
-                    if (re.success) {
-                        console.log("Updated!");
-                        updated(true);
-                    } else {
-                        console.error(re);
+                //let myClaims = prepareClaims(editObj)
+
+                if (Object.entries(editObj).length === 0 && editObj.constructor === Object) {
+                    console.log("Skip! Everything already in!");
+                    updated(true);
+                    return
+                } else {
+                    console.log("Updating...");
+                    wbEdit.entity.edit({
+                      id: object.id,
+                      claims: editObj
+                    }).then(re => {
+                        if (re.success) {
+                            updated(true);
+                        } else {
+                            console.error(re);
+                            updated(false);
+                        }
+                    }).catch(err => {
+                        console.log("Something wrong!");
+                        console.log(err);
+                        console.log(editObj);
                         updated(false);
-                    }
-                }).catch(err => {
-                    console.log("Something wrong!");
-                    console.log(err);
-                    console.log(editObj);
-                    updated(false);
-                });
-            }
+                    });
+                }
+
+            });
         });
     });
 }
