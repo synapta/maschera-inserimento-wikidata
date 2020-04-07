@@ -129,6 +129,34 @@
 
     <button class="ui button"><i class="plus icon"></i> Aggiungi monumento</button>
 
+    <div id="fase2" class="ui placeholder segment">
+      <div class="ui two column stackable center aligned grid">
+        <div class="ui vertical divider">Se manca ></div>
+        <div class="middle aligned row">
+          <div class="column">
+            <div class="ui icon header">
+              Cerca in Wikidata<br>il monumento
+            </div>
+            <div class="field">
+              <div class="ui search">
+                <div class="ui icon input">
+                  <input class="prompt" type="text" placeholder="Scrivi il nome del bene...">
+                </div>
+                <div class="results"></div>
+              </div>
+            </div>
+          </div>
+          <div class="column">
+            <a href="/maschera">
+              <div class="ui primary button">
+                Nuovo elemento Wikidata
+              </div>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 
   <div class="ui inverted vertical footer segment">
@@ -182,7 +210,7 @@
   <script src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js"
   integrity="sha512-gZwIG9x3wUXg2hdXF6+rVkLF/0Vi9U8D2Ntg4Ga5I5BZpVkVxlJWbSQtXPSiUTtC0TjtGOmxa1AJPuV0CPthew=="
   crossorigin=""></script>
-  <script src="/js/index.js"></script>
+  <script src="/js/monumenti.js"></script>
 </body>
 
 </html>

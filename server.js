@@ -6,6 +6,7 @@ const MemoryStore = require('memorystore')(session)
 const morgan = require('morgan');
 const request = require('request');
 const passport = require('passport');
+const bodyParser = require('body-parser');
 const MediaWikiStrategy = require('passport-mediawiki-oauth').OAuthStrategy;
 
 passport.serializeUser(function (user, done) {
@@ -19,7 +20,7 @@ passport.deserializeUser(function (obj, done) {
 passport.use(new MediaWikiStrategy({
     consumerKey: process.env.MEDIAWIKI_CONSUMER_KEY,
     consumerSecret: process.env.MEDIAWIKI_CONSUMER_SECRET,
-    baseURL: 'https://wiki.synapta.io/' // TODO
+    baseURL: 'https://www.wikidata.org/'
 },
     function (token, tokenSecret, profile, done) {
         process.nextTick(function () {
@@ -28,17 +29,20 @@ passport.use(new MediaWikiStrategy({
                 consumer_secret: process.env.MEDIAWIKI_CONSUMER_SECRET,
                 token: token,
                 token_secret: tokenSecret
-              };
+            };
             return done(null, profile);
         });
     }
 ));
 
 const config = {
-    instance: 'https://www.wikidata.org/w/api.php',
+    instance: 'https://www.wikidata.org/w/api.php'
 }
 const wdEdit = require('wikibase-edit')(config);
 const utils = require('./utils');
+const Client = require('nextcloud-node-client').Client;
+const nextcloud = new Client();
+const fileUpload = require('express-fileupload');
 
 const app = express();
 
@@ -53,7 +57,17 @@ app.use(session({
 }));
 app.use(passport.initialize());
 app.use(passport.session());
+app.use(fileUpload());
 app.use(morgan('common'));
+app.use(bodyParser.json());
+
+// TODO remove when callback is set properly
+app.get('/', function (req, res, next) {
+    if (req.query.oauth_verifier && req.query.oauth_token) {
+        res.redirect('/auth/mediawiki/callback?oauth_verifier=' + req.query.oauth_verifier + '&oauth_token=' + req.query.oauth_token);
+    }
+    return next();
+});
 
 app.use('/', express.static('./app'));
 
@@ -63,10 +77,6 @@ function ensureAuthenticated(req, res, next) {
     }
     res.redirect('/login');
 }
-
-app.get('/account', ensureAuthenticated, function (req, res) {
-    res.json({ user: req.user });
-});
 
 app.get('/logout', function (req, res) {
     req.logout();
@@ -104,9 +114,47 @@ app.get('/maschera', function (req, res) {
     res.sendFile(__dirname + '/app/maschera.html');
 });
 
+app.get('/api/account', function (req, res) {
+    res.json({ user: req.user });
+});
+
+app.post('/api/upload', async function (req, res) {
+    const upload = req.files.upload;
+    try {
+        const folder = await nextcloud.getFolder("/");
+        await folder.createFile(Date.now() + "-" + upload.name, upload.data);
+        res.status(200).send();
+    } catch {
+        res.status(500).send();
+    }
+});
+
+app.get('/api/store/ente', function (req, res) {
+    req.session.ente = req.query.id;
+    res.status(200).send("saved");
+});
+
 app.get('/api/suggestion/comune', function (req, res) {
     let matchComuni = utils.suggestComuni(req.query.q);
     res.status(200).send(matchComuni);
+});
+
+app.get('/api/suggestion/generic', function(req, res) {
+    utils.simpleWikidataSuggestion(req.query.q, function(result) {
+        if (result) {
+            if (result.error) {
+                res.status(404).send("Not Found");
+            } else {
+                result.search = result.search.filter(function (item) {
+                    delete item.url;
+                    return true;
+                });
+                res.status(200).send(result);
+            }
+        } else {
+            res.status(500).send("Error");
+        }
+    });
 });
 
 app.get('/api/query/comune', function (req, res) {
@@ -136,6 +184,40 @@ app.get('/api/query/comune', function (req, res) {
             }
         });
     })
+});
+
+app.get('/api/entity/get', function (req, res) {
+    utils.getItem(req.query.id, function (result) {
+        if (result) {
+            if (result.error) {
+                res.status(404).send("Not Found");
+            } else {
+                res.status(200).send(Object.values(result.entities)[0]);
+            }
+        } else {
+            res.status(500).send("Error");
+        }
+    });
+});
+
+app.post('/api/entity/edit', function (req, res) {
+    utils.editItem(req.body.entity, function (success) {
+        if (success) {
+            res.status(200).send("OK");
+        } else {
+            res.status(500).send("Error");
+        }
+    });
+});
+
+app.post('/api/entity/create', function (req, res) {
+    utils.createNewItem(req.body.entity, function (success) {
+        if (success) {
+            res.status(200).send("OK");
+        } else {
+            res.status(500).send("Error");
+        }
+    });
 });
 
 const server = app.listen(8080, function () {
