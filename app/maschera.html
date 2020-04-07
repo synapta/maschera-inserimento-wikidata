@@ -86,11 +86,11 @@
     <form class="ui form">
       <div class="field">
         <label>Nome in italiano</label>
-        <input type="text" name="first-name" placeholder="Nome del bene">
+        <input type="text" name="label" placeholder="Nome del bene">
       </div>
       <div class="field">
         <label>Descrizione in italiano</label>
-        <input type="text" name="last-name" placeholder="Descrizione supersintetica del bene (e.g. museo di scienze)">
+        <input type="text" name="descrizione" placeholder="Descrizione supersintetica del bene (e.g. museo di scienze)">
       </div>
       <div class="field">
         <label>Tipologia</label>
@@ -102,26 +102,30 @@
       </div>
       <div class="field">
         <label>Comune</label>
-        <input type="text" name="last-name" placeholder="Il Comune italiano presso cui si trova il bene">
+        <div class="ui search">
+          <div class="ui input">
+            <input class="prompt" type="text" name="comune" placeholder="Il Comune italiano presso cui si trova il bene">
+          </div>
+        </div>
       </div>
       <div class="field">
         <label>Indirizzo stradale</label>
-        <input type="text" name="last-name" placeholder="Indirizzo con nome via e numero civico (e.g. Via Roma, 123)">
+        <input type="text" name="indirizzo" placeholder="Indirizzo con nome via e numero civico (e.g. Via Roma, 123)">
       </div>
       <div id="mapid"></div>
       <div class="two fields">
         <div class="disabled field">
           <label>Latitudine</label>
-          <input id="coordLat" type="text" name="last-name" placeholder="Latitudine (clicca sulla mappa)">
+          <input id="coordLat" type="text" name="lat" placeholder="Latitudine (clicca sulla mappa)">
         </div>
         <div class="disabled field">
           <label>Longitudine</label>
-          <input id="coordLng" type="text" name="last-name" placeholder="Longitudine (clicca sulla mappa)">
+          <input id="coordLng" type="text" name="long" placeholder="Longitudine (clicca sulla mappa)">
         </div>
       </div>
       <div class="field">
         <label>Sito Web ufficiale</label>
-        <input type="text" name="last-name" placeholder="Sito web che riguarda il bene (se esiste)">
+        <input type="text" name="sito-web" placeholder="Sito web che riguarda il bene (se esiste)">
       </div>
       <div class="field">
         <label>Parte del monumento coinvolta nell'autorizzazione</label>
@@ -131,10 +135,11 @@
           <option value="AK">monumento</option>
         </select>
       </div>
-      Cliccando il tasto accetto termini e condizioni di Wikidata e mi assumo la
-      responsabilità della veridicità delle informazioni.<br>
-      <button class="ui button" type="submit">Invia a Wikidata!</button>
     </form>
+
+    Cliccando il tasto accetto termini e condizioni di Wikidata e mi assumo la
+    responsabilità della veridicità delle informazioni.<br>
+    <button class="ui button" id="sendMaschera">Invia a Wikidata!</button>
 
   </div>
 
@@ -190,6 +195,8 @@
   integrity="sha512-gZwIG9x3wUXg2hdXF6+rVkLF/0Vi9U8D2Ntg4Ga5I5BZpVkVxlJWbSQtXPSiUTtC0TjtGOmxa1AJPuV0CPthew=="
   crossorigin=""></script>
   <script src="/js/map.js"></script>
+  <script src="/js/comuni.js"></script>
+  <script src="/js/maschera.js"></script>
 </body>
 
 </html>

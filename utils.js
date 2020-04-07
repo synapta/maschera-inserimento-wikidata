@@ -16,7 +16,7 @@ exports.parseComuniFile = function() {
     COMUNI_NOMI = Object.keys(comuni);
     COMUNI_ARR = []
     for (let k in COMUNI_ID) {
-      COMUNI_ARR.push({'nome': k, 'id': comuni[k]});
+      COMUNI_ARR.push({'title': k, 'id': comuni[k]});
     }
 }
 
@@ -44,11 +44,11 @@ exports.suggestComuni = function(query, cb) {
     if (query.length > 1) {
       console.log(COMUNI_ARR)
         //return COMUNI_NOMI.filter(c => c.toLowerCase().startsWith(query.toLowerCase()));
-        return COMUNI_ARR.filter(function (el) {
-          return el.nome.toLowerCase().startsWith(query.toLowerCase());
-        });
+        return { "items" : COMUNI_ARR.filter(function (el) {
+          return el.title.toLowerCase().startsWith(query.toLowerCase());
+        }) }
     } else {
-        return [];
+        return { "items" : [] };
     }
 }
 
