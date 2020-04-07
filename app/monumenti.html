@@ -12,73 +12,7 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css"
    integrity="sha512-xwE/Az9zrjBIphAcBb3F6JVqxf46+CDLwfLMHloNu6KEQCAWi6HcDUbeOfBIptF7tcCzusKFjFw2yuvEpDL9wQ=="
    crossorigin=""/>
-  <style type="text/css">
-
-  body {
-    background-color: #FFFFFF;
-  }
-  .main.container {
-    margin-top: 2em;
-  }
-
-  .main.menu {
-    margin-top: 4em;
-    border-radius: 0;
-    border: none;
-    box-shadow: none;
-    transition:
-      box-shadow 0.5s ease,
-      padding 0.5s ease
-    ;
-  }
-  .main.menu .item img.logo {
-    margin-right: 1.5em;
-  }
-
-  .overlay {
-    float: left;
-    margin: 0em 3em 1em 0em;
-  }
-  .overlay .menu {
-    position: relative;
-    left: 0;
-    transition: left 0.5s ease;
-  }
-
-  .main.menu.fixed {
-    background-color: #FFFFFF;
-    border: 1px solid #DDD;
-    box-shadow: 0px 3px 5px rgba(0, 0, 0, 0.2);
-  }
-  .overlay.fixed .menu {
-    left: 800px;
-  }
-
-  .text.container .left.floated.image {
-    margin: 2em 2em 2em -4em;
-  }
-  .text.container .right.floated.image {
-    margin: 2em -4em 2em 2em;
-  }
-
-  .ui.footer.segment {
-    margin: 5em 0em 0em;
-    padding: 5em 0em;
-  }
-
-  .inputfile {
-	width: 0.1px;
-	height: 0.1px;
-	opacity: 0;
-	overflow: hidden;
-	position: absolute;
-	z-index: -1;
-
-}
-#mapid { height: 50vh; }
-
-  </style>
-
+  <link rel="stylesheet" href="/css/basic.css" type="text/css" />
 </head>
 <body>
 
@@ -111,27 +45,32 @@
     </div>
 
     <div id="fase4text">
-      <p>Inserisci le informazioni per ogni monumento. L'attività minima da compiere
-        è dichiarare uno per uno i monumenti autorizzati cliccando sul bottone qui
-        sotto "aggiungi monumento". Così facendo dichiarerai quali monumenti su
-        Wikidata hai appena autorizzato nel documento, salvando anche là, come
-        dato strutturato l'informazione per i partecipanti del concorso.
+      <h3 class="ui dividing header">Compilazione monumenti</h3>
+      <p>Dichiara uno per uno i monumenti appena autorizzati
+        cliccando sul bottone "aggiungi monumento". Una volta concluso clicca su
+        "Tutti i monumenti sono qui!"
       </p>
       <p>Qualora non riuscissi a trovare un monumento (anche dopo aver provato
         sinonimi o nomi alternativi), potrebbe essere necessario aggiungerlo. Su
         Wikidata infatti non ci sono ancora tutti i monumenti!
       </p>
-      <p>Infine, per ogni monumento scelto, è possibile modificare le informazioni
+      <p>Per ogni monumento scelto, è possibile modificare le informazioni
         che sono attualmente presenti su Wikidata, completando campi vuoti o
         migliorando quelli esistenti.
       </p>
     </div>
 
-    <h2>Monumenti presenti nell'autorizzazione</h2>
+    <h3 class="ui dividing header">Monumenti presenti nell'autorizzazione</h3>
 
-    <button id="addMonuButton" class="ui button">
+    <button id="addMonuButton" class="ui primary button">
       <i class="plus icon"></i> Aggiungi monumento
     </button>
+
+    <a href="/the-end">
+      <button class="ui green button">
+        <i class="check icon"></i> Tutti i monumenti sono qui!
+      </button>
+    </a>
 
     <div id="fase2" class="ui placeholder segment" style="display:none">
       <div class="ui two column stackable center aligned grid">
@@ -139,7 +78,7 @@
         <div class="middle aligned row">
           <div class="column">
             <div class="ui icon header">
-              Cerca in Wikidata<br>il monumento
+              Cerca il monumento<br>su Wikidata
             </div>
             <div class="field">
               <div class="ui search">
@@ -163,6 +102,12 @@
 
     <div id="monumentList"></div>
 
+    <div id="supporto">
+      <h3 class="ui dividing header">Serve una mano?</h3>
+      <p>Se non sai come proseguire o hai un problema in questo passaggio,
+        <a href="https://www.wikimedia.it/contatti/" target="_blank">contattaci!</a>
+      </p>
+    </div>
   </div>
 
   <div class="ui inverted vertical footer segment">

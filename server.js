@@ -115,6 +115,10 @@ app.get('/maschera', function (req, res) {
     res.sendFile(__dirname + '/app/maschera.html');
 });
 
+app.get('/the-end', function (req, res) {
+    res.sendFile(__dirname + '/app/grazie.html');
+});
+
 app.get('/api/account', function (req, res) {
     res.json({ user: req.user });
 });

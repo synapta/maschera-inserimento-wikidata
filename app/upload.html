@@ -12,73 +12,7 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css"
    integrity="sha512-xwE/Az9zrjBIphAcBb3F6JVqxf46+CDLwfLMHloNu6KEQCAWi6HcDUbeOfBIptF7tcCzusKFjFw2yuvEpDL9wQ=="
    crossorigin=""/>
-  <style type="text/css">
-
-  body {
-    background-color: #FFFFFF;
-  }
-  .main.container {
-    margin-top: 2em;
-  }
-
-  .main.menu {
-    margin-top: 4em;
-    border-radius: 0;
-    border: none;
-    box-shadow: none;
-    transition:
-      box-shadow 0.5s ease,
-      padding 0.5s ease
-    ;
-  }
-  .main.menu .item img.logo {
-    margin-right: 1.5em;
-  }
-
-  .overlay {
-    float: left;
-    margin: 0em 3em 1em 0em;
-  }
-  .overlay .menu {
-    position: relative;
-    left: 0;
-    transition: left 0.5s ease;
-  }
-
-  .main.menu.fixed {
-    background-color: #FFFFFF;
-    border: 1px solid #DDD;
-    box-shadow: 0px 3px 5px rgba(0, 0, 0, 0.2);
-  }
-  .overlay.fixed .menu {
-    left: 800px;
-  }
-
-  .text.container .left.floated.image {
-    margin: 2em 2em 2em -4em;
-  }
-  .text.container .right.floated.image {
-    margin: 2em -4em 2em 2em;
-  }
-
-  .ui.footer.segment {
-    margin: 5em 0em 0em;
-    padding: 5em 0em;
-  }
-
-  .inputfile {
-	width: 0.1px;
-	height: 0.1px;
-	opacity: 0;
-	overflow: hidden;
-	position: absolute;
-	z-index: -1;
-
-}
-#mapid { height: 50vh; }
-
-  </style>
-
+  <link rel="stylesheet" href="/css/basic.css" type="text/css" />
 </head>
 <body>
 
@@ -111,7 +45,11 @@
     </div>
 
     <div id="fase3text">
-      <p>Carica il file con l'autorizzazione firmata. Il file verrà caricato su
+      <h3 class="ui dividing header">Caricamento file autorizzazione</h3>
+      <p>Carica il file con l'autorizzazione firmata. Generalmente i tuoi colleghi
+        hanno caricato dei PDF (un
+        <a href="https://wikimediaitalia.nws.netways.de/index.php/s/MRz2k7mWa8xswCJ/download?path=%2FRavenna%20(RA)%2FAdesione%20Ravenna%20WLM%202016&files=f.ODM.PH2016-000087.pdf">esempio</a>).
+        La dimensione massima è 10MB. Il file verrà caricato su
         un server Nextcloud di Wikimedia Italia.
       </p>
     </div>
@@ -119,14 +57,19 @@
     <div id="fase3" class="ui middle aligned center aligned grid container" style="margin:3em">
       <div class="ui fluid">
         <input type="file" class="inputfile" id="embedpollfileinput" />
-        <label for="embedpollfileinput" class="ui huge red right floated button">
+        <label for="embedpollfileinput" class="ui huge primary right floated button">
           <i class="ui upload icon"></i>
           Carica autorizzazione
         </label>
       </div>
     </div>
 
-
+    <div id="supporto">
+      <h3 class="ui dividing header">Serve una mano?</h3>
+      <p>Se non sai come proseguire o hai un problema in questo passaggio,
+        <a href="https://www.wikimedia.it/contatti/" target="_blank">contattaci!</a>
+      </p>
+    </div>
   </div>
 
   <div class="ui inverted vertical footer segment">
