@@ -157,6 +157,12 @@ app.get('/api/suggestion/generic', function(req, res) {
     });
 });
 
+app.get('/api/query/comuneByQ', function (req, res) {
+    utils.getTitleFromQWithFile(req.query.id, function (obj) {
+        res.status(200).send(obj);
+    });
+});
+
 app.get('/api/query/comune', function (req, res) {
     utils.getQfromTitleWithFile(req.query.q, function (pageId) {
         if (pageId === undefined) {

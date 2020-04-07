@@ -68,6 +68,10 @@ exports.getQfromTitleWithFile = function(title, cb) {
     cb(COMUNI_ID[title]);
 }
 
+exports.getTitleFromQWithFile = function(id, cb) {
+    cb(COMUNI_ARR.find(x => x.id === id));
+}
+
  var getItem = function(id, cb) {
     let endpointWikidata = {
         method: 'GET',
