@@ -105,7 +105,7 @@ app.get('/maschera', function (req, res) {
     res.sendFile(__dirname + '/app/maschera.html');
 });
 
-app.get('/api/account', ensureAuthenticated, function (req, res) {
+app.get('/api/account', function (req, res) {
     res.json({ user: req.user });
 });
 
@@ -118,6 +118,11 @@ app.post('/api/upload', async function (req, res) {
     } catch {
         res.status(500).send();
     }
+});
+
+app.get('/api/store/ente', function (req, res) {
+    req.session.ente = req.query.id;
+    res.status(200).send("saved");
 });
 
 app.get('/api/suggestion/comune', function (req, res) {
