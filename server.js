@@ -28,7 +28,7 @@ passport.use(new MediaWikiStrategy({
                 consumer_secret: process.env.MEDIAWIKI_CONSUMER_SECRET,
                 token: token,
                 token_secret: tokenSecret
-              };
+            };
             return done(null, profile);
         });
     }
@@ -39,6 +39,9 @@ const config = {
 }
 const wdEdit = require('wikibase-edit')(config);
 const utils = require('./utils');
+const Client = require('nextcloud-node-client').Client;
+const nextcloud = new Client();
+const fileUpload = require('express-fileupload');
 
 const app = express();
 
@@ -53,6 +56,7 @@ app.use(session({
 }));
 app.use(passport.initialize());
 app.use(passport.session());
+app.use(fileUpload());
 app.use(morgan('common'));
 
 app.use('/', express.static('./app'));
@@ -102,6 +106,17 @@ app.get('/monumenti', function (req, res) {
 
 app.get('/maschera', function (req, res) {
     res.sendFile(__dirname + '/app/maschera.html');
+});
+
+app.post('/api/upload', async function (req, res) {
+    const upload = req.files.upload;
+    try {
+        const folder = await nextcloud.getFolder("/");
+        await folder.createFile(Date.now() + "-" + upload.name, upload.data);
+        res.status(200).send();
+    } catch {
+        res.status(500).send();
+    }
 });
 
 app.get('/api/suggestion/comune', function (req, res) {
