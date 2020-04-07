@@ -14,6 +14,10 @@ exports.parseComuniFile = function() {
     });
     COMUNI_ID = comuni;
     COMUNI_NOMI = Object.keys(comuni);
+    COMUNI_ARR = []
+    for (let k in COMUNI_ID) {
+      COMUNI_ARR.push({'nome': k, 'id': comuni[k]});
+    }
 }
 
 exports.sparqlQueryMonuments = function(id) {
@@ -38,7 +42,11 @@ exports.sparqlQueryMonuments = function(id) {
 
 exports.suggestComuni = function(query, cb) {
     if (query.length > 1) {
-        return COMUNI_NOMI.filter(c => c.toLowerCase().startsWith(query.toLowerCase()));
+      console.log(COMUNI_ARR)
+        //return COMUNI_NOMI.filter(c => c.toLowerCase().startsWith(query.toLowerCase()));
+        return COMUNI_ARR.filter(function (el) {
+          return el.nome.toLowerCase().startsWith(query.toLowerCase());
+        });
     } else {
         return [];
     }
