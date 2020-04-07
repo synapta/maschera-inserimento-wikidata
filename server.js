@@ -6,6 +6,7 @@ const MemoryStore = require('memorystore')(session)
 const morgan = require('morgan');
 const request = require('request');
 const passport = require('passport');
+const bodyParser = require('body-parser');
 const MediaWikiStrategy = require('passport-mediawiki-oauth').OAuthStrategy;
 
 passport.serializeUser(function (user, done) {
@@ -54,7 +55,7 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 app.use(morgan('common'));
-
+app.use(bodyParser.json());
 app.use('/', express.static('./app'));
 
 function ensureAuthenticated(req, res, next) {
@@ -138,7 +139,41 @@ app.get('/api/query/comune', function (req, res) {
     })
 });
 
-const server = app.listen(8080, function () {
+app.get('/api/entity/get', function(req, res) {
+    utils.getItem(req.query.id, function(result) {
+        if (result) {
+            if (result.error) {
+                res.status(404).send("Not Found");
+            } else {
+                res.status(200).send(Object.values(result.entities)[0]);
+            }
+        } else {
+            res.status(500).send("Error");
+        }
+    });
+});
+
+app.post('/api/entity/edit', function(req, res) {
+    utils.editItem(req.body.entity, function(success) {
+        if (success) {
+            res.status(200).send("OK");
+        } else {
+            res.status(500).send("Error");
+        }
+    });
+});
+
+app.post('/api/entity/create', function(req, res) {
+    utils.createNewItem(req.body.entity, function(success) {
+        if (success) {
+            res.status(200).send("OK");
+        } else {
+            res.status(500).send("Error");
+        }
+    });
+});
+
+const server = app.listen(8080, function() {
     var host = server.address().address;
     var port = server.address().port;
     utils.parseComuniFile();
