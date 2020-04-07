@@ -2,9 +2,11 @@
   "dependencies": {
     "dotenv": "^8.2.0",
     "express": "^4.17.1",
+    "express-fileupload": "^1.1.7-alpha.2",
     "express-session": "^1.17.0",
     "memorystore": "^1.6.2",
     "morgan": "^1.10.0",
+    "nextcloud-node-client": "^1.1.6",
     "passport": "^0.4.1",
     "passport-mediawiki-oauth": "^0.1.0",
     "request": "^2.88.2",
