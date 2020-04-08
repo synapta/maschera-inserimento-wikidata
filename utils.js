@@ -1,12 +1,7 @@
 const request   = require('request');
 const fs        = require('fs');
-const config    = {
-    instance: 'https://www.wikidata.org/w/api.php',
-    credentials: {
-      username: "GiulioCard",
-      password: "arpS2eOnVGhfwVzOPWmH",
-      summary: "Test Edit with API"
-    }
+const config = {
+    instance: 'https://www.wikidata.org/w/api.php'
 }
 const wbEdit    = require('wikibase-edit')(config);
 const wbk       = require('wikibase-sdk')({
@@ -120,7 +115,7 @@ function prepareClaims(obj) {
     return myClaims;
 }
 
-exports.createNewItem = function (object, created) {
+exports.createNewItem = function (object, oauth, created) {
     //let myClaims = prepareClaims(obj)
 
     console.log("Creating...")
@@ -128,7 +123,7 @@ exports.createNewItem = function (object, created) {
         descriptions: { it: object.description},
         labels: { it: object.label},
         claims: object.claims
-    }).then(re => {
+    }, {credentials: {oauth: oauth}}).then(re => {
         if (re.success) {
             console.log("Created!");
             created(true);
@@ -206,7 +201,7 @@ function removeDuplicates(wdObj, obj, cb) {
     }
 }
 
-function createEmptyWlmIdOrSkip(object, cb) {
+function createEmptyWlmIdOrSkip(object, oauth, cb) {
     let wlmProp = object.claims.P2186;
     if (wlmProp && wlmProp.qualifiers && wlmProp.qualifiers.P580 && wlmProp.value === undefined) {
         console.log("Creating empty P2186 with date qualifier")
@@ -214,13 +209,13 @@ function createEmptyWlmIdOrSkip(object, cb) {
           id: object.id,
           property: 'P2186',
           value: { snaktype: 'novalue' }
-        }).then(re => {
+        }, {credentials: {oauth: oauth}}).then(re => {
             let claimId = re.claim.id;
             wbEdit.qualifier.set({
               guid: claimId,
               property: 'P580',
               value: wlmProp.qualifiers.P580
-          }).then(re => {
+          }, {credentials: {oauth: oauth}}).then(re => {
               cb();
           })
         })
@@ -229,7 +224,7 @@ function createEmptyWlmIdOrSkip(object, cb) {
     }
 }
 
-exports.editItem = function (object, updated) {
+exports.editItem = function (object, oauth, updated) {
 
     getItem(object.id, function(wdObject) {
         if (wdObject === undefined) {
@@ -241,7 +236,7 @@ exports.editItem = function (object, updated) {
 
         removeDuplicates(wdObject.entities[object.id].claims, object.claims, function (editObj) {
 
-            createEmptyWlmIdOrSkip(object, function() {
+            createEmptyWlmIdOrSkip(object, oauth, function() {
 
                 //let myClaims = prepareClaims(editObj)
 
@@ -254,7 +249,7 @@ exports.editItem = function (object, updated) {
                     wbEdit.entity.edit({
                       id: object.id,
                       claims: editObj
-                    }).then(re => {
+                    }, {credentials: {oauth: oauth}}).then(re => {
                         if (re.success) {
                             updated(true);
                         } else {
