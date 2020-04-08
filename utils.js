@@ -454,11 +454,16 @@ exports.anonymousEditItem = function(object, updated) {
 
             request(endpointWikidata, function(err,res,body){
                 if (err) {
-                    console.log("Error editing item anonymously:\n\n", err);
+                    console.log("Error editing item:\n\n", err);
                     updated(false);
                 } else {
-                    console.log("Item succesfully edited!")
-                    updated(true);
+                    if (body.error !== undefined && body.error !== null) {
+                        console.log("Error creating item:\n\n", body.error);
+                        updated(false);
+                    } else {
+                        console.log("Item succesfully edited!")
+                        updated(true);
+                    }
                 }
             })
 
@@ -489,12 +494,16 @@ exports.anonymousCreateNewItem = function(object, created) {
 
     request(endpointWikidata, function(err, res, body){
         if (err) {
-            console.log("Error creating item anonymously:\n\n", err);
+            console.log("Error creating item:\n\n", err);
             created(false);
         } else {
-            console.log("Item succesfully created!")
-            console.log("BODY:", body)
-            created(true);
+            if (body.error !== undefined && body.error !== null) {
+                console.log("Error creating item:\n\n", body.error);
+                created(false);
+            } else {
+                console.log("Item succesfully created!");
+                created(true);
+            }
         }
     })
 }
