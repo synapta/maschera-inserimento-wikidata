@@ -226,7 +226,9 @@ app.get('/api/entity/get', function (req, res) {
 });
 
 app.post('/api/entity/edit', function (req, res) {
-    req.session.list.push({ 'id': req.body.entity.id, 'label': req.body.entity.label });
+    if (req.session.list) {
+        req.session.list.push({ 'id': req.body.entity.id, 'label': req.body.entity.label });
+    }
     utils.editItem(req.body.entity, req.user, function (success) {
         if (success) {
             res.status(200).send("OK");
@@ -237,7 +239,9 @@ app.post('/api/entity/edit', function (req, res) {
 });
 
 app.post('/api/entity/create', function (req, res) {
-    req.session.list.push(req.body.entity.id);
+    if (req.session.list) {
+        req.session.list.push(req.body.entity.id);
+    }
     utils.createNewItem(req.body.entity, req.user, function (success) {
         if (success) {
             res.status(200).send("OK");

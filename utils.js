@@ -120,12 +120,12 @@ function prepareClaims(obj) {
 }
 
 exports.createNewItem = function (object, user, created) {
-    //let myClaims = prepareClaims(obj)
 
     if (user === undefined) {
-        console.log("Not logged in");
-        // TODO
-        created(false);
+        console.log("Not logged in, proceeding with anonymous request.");
+        anonymousCreateNewItem(object, function(res) {
+            created(res);
+        });
         return;
     }
 
@@ -238,9 +238,10 @@ function createEmptyWlmIdOrSkip(object, user, cb) {
 exports.editItem = function (object, user, updated) {
 
     if (user === undefined) {
-        console.log("Not logged in");
-        // TODO
-        updated(false);
+        console.log("Not logged in, proceeding with anonymous request.");
+        anonymousEditItem(object, function(res) {
+            updated(res);
+        });
         return;
     }
 
@@ -417,7 +418,7 @@ var buildRawWikidataObject = function(postObject) {
     return rawObject;
 }
 
-exports.anonymousEditItem = function(object, updated) {
+var anonymousEditItem = function(object, updated) {
     getItem(object.id, function(wdObject) {
         if (wdObject === undefined) {
             updated(false);
@@ -472,7 +473,7 @@ exports.anonymousEditItem = function(object, updated) {
     });
 }
 
-exports.anonymousCreateNewItem = function(object, created) {
+var anonymousCreateNewItem = function(object, created) {
 
     let rawObject = buildRawWikidataObject(object.claims);
 
