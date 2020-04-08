@@ -152,40 +152,44 @@ exports.createNewItem = function (object, user, created) {
 
 function checkSameProperties(propName, wdProp, curProp) {
     let wdValue = wbk.simplify.propertyClaims(wdProp);
-    let curValue = curProp;
+    let curValueArr = Array.isArray(curProp) ? curProp : [curProp];
 
     let result;
-    switch(propName) {
-        case 'P6375':
-            result = wdValue.includes(curValue.text);
-            break;
-        case 'P625':
-            result = false;
-            for (let i=0; i<wdValue.length; i++) {
-                if (wdValue[i][0] === curValue.latitude && wdValue[i][1] === curValue.longitude) {
-                    result = true;
-                }
-            }
-            break;
-        case 'P2186':
-            if (wdValue.includes(curValue.value)) {
-                if (curProp.qualifiers && curProp.qualifiers.P580) {
-                    let wdQual = undefined, index = wdValue.indexOf(curValue.value);
-                    if (wdProp[index].qualifiers && wdProp[index].qualifiers.P580) {
-                        wdQual = wbk.simplify.propertyQualifiers(wdProp[index].qualifiers.P580)[0].split("T")[0];
-                    }
-                    if (wdQual === undefined) {
-                        result = false;
-                    } else {
-                        result = curProp.qualifiers.P580 === wdQual;
-                    }
-                }
-            } else {
+    for (let i = 0; i<curValueArr.length; i++) {
+        let curValue = curValueArr[i];
+
+        switch(propName) {
+            case 'P6375':
+                result = wdValue.includes(curValue.text);
+                break;
+            case 'P625':
                 result = false;
-            }
-            break;
-        default:
-            result = wdValue.includes(curValue);
+                for (let i=0; i<wdValue.length; i++) {
+                    if (wdValue[i][0] === curValue.latitude && wdValue[i][1] === curValue.longitude) {
+                        result = true;
+                    }
+                }
+                break;
+            case 'P2186':
+                if (wdValue.includes(curValue.value)) {
+                    if (curProp.qualifiers && curProp.qualifiers.P580) {
+                        let wdQual = undefined, index = wdValue.indexOf(curValue.value);
+                        if (wdProp[index].qualifiers && wdProp[index].qualifiers.P580) {
+                            wdQual = wbk.simplify.propertyQualifiers(wdProp[index].qualifiers.P580)[0].split("T")[0];
+                        }
+                        if (wdQual === undefined) {
+                            result = false;
+                        } else {
+                            result = curProp.qualifiers.P580 === wdQual;
+                        }
+                    }
+                } else {
+                    result = false;
+                }
+                break;
+            default:
+                result = wdValue.includes(curValue);
+        }
     }
     return result;
 }
@@ -203,7 +207,12 @@ function removeDuplicates(wdObj, obj, cb) {
             newObj[k] = obj[k];
         } else {
             if (!checkSameProperties(k, wdObj[k], obj[k])) {
-                newObj[k] = obj[k];
+                if (Array.isArray(obj[k])) {
+                    let wdValues = wbk.simplify.propertyClaims(wdObj[k]);
+                    newObj[k] = obj[k].filter(e => !wdValues.includes(e));
+                } else {
+                    newObj[k] = obj[k];
+                }
             }
         }
         if (++currKey === totalKeys) {
@@ -251,13 +260,12 @@ exports.editItem = function (object, user, updated) {
             return;
         }
 
-        console.log(JSON.stringify(object, null, 2))
 
         removeDuplicates(wdObject.entities[object.id].claims, object.claims, function (editObj) {
 
-            createEmptyWlmIdOrSkip(object, user, function() {
+            console.log(JSON.stringify(editObj, null, 2))
 
-                //let myClaims = prepareClaims(editObj)
+            createEmptyWlmIdOrSkip(object, user, function() {
 
                 if (Object.entries(editObj).length === 0 && editObj.constructor === Object) {
                     console.log("Skip! Everything already in!");
@@ -405,7 +413,10 @@ var buildRawWikidataObject = function(postObject) {
     };
 
     for (var k in postObject) {
-        rawObject.claims.push(convertSingleStatementToRaw(k, postObject[k]));
+        let values = Array.isArray(postObject[k]) ? postObject[k] : [postObject[k]];
+        for (let i=0; i<values.length; i++) {
+            rawObject.claims.push(convertSingleStatementToRaw(k, values[i]));
+        }
     }
 
     if (postObject.description) {
