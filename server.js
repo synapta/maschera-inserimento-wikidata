@@ -30,7 +30,6 @@ passport.use(new MediaWikiStrategy({
                 token: token,
                 token_secret: tokenSecret
             };
-            profile.list = [];
             return done(null, profile);
         });
     }
@@ -104,6 +103,9 @@ app.get('/upload', function (req, res) {
 });
 
 app.get('/monumenti', function (req, res) {
+    if (req.session.list === undefined) {
+        req.session.list = [];
+    }
     res.sendFile(__dirname + '/app/monumenti.html');
 });
 
@@ -112,11 +114,14 @@ app.get('/maschera', function (req, res) {
 });
 
 app.get('/the-end', function (req, res) {
+    if (req.session.list) {
+        delete req.session.list;
+    }
     res.sendFile(__dirname + '/app/grazie.html');
 });
 
-app.get('/api/account', function (req, res) {
-    res.json({ user: req.user });
+app.get('/api/list', function (req, res) {
+    res.json(req.session.list);
 });
 
 app.post('/api/upload', async function (req, res) {
@@ -130,9 +135,14 @@ app.post('/api/upload', async function (req, res) {
     }
 });
 
-app.get('/api/store/ente', function (req, res) {
-    req.user.ente = req.query.id;
-    res.status(200).send("saved");
+app.get('/api/ente', function (req, res) {
+    res.json(req.session.ente);
+});
+
+app.post('/api/ente', function (req, res) {
+    console.log(req.body);
+    req.session.ente = req.body.id;
+    res.status(200).send("Saved");
 });
 
 app.get('/api/suggestion/comune', function (req, res) {
@@ -208,8 +218,8 @@ app.get('/api/entity/get', function (req, res) {
 });
 
 app.post('/api/entity/edit', function (req, res) {
-    req.user.list.push({ 'id': req.body.entity.id, 'label': req.body.entity.label });
-    utils.editItem(req.body.entity, req.user.oauth, function (success) {
+    req.session.list.push({ 'id': req.body.entity.id, 'label': req.body.entity.label });
+    utils.editItem(req.body.entity, req.user, function (success) {
         if (success) {
             res.status(200).send("OK");
         } else {
@@ -219,8 +229,8 @@ app.post('/api/entity/edit', function (req, res) {
 });
 
 app.post('/api/entity/create', function (req, res) {
-    req.user.list.push(req.body.entity.id);
-    utils.createNewItem(req.body.entity, req.user.oauth, function (success) {
+    req.session.list.push(req.body.entity.id);
+    utils.createNewItem(req.body.entity, req.user, function (success) {
         if (success) {
             res.status(200).send("OK");
         } else {

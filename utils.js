@@ -115,15 +115,22 @@ function prepareClaims(obj) {
     return myClaims;
 }
 
-exports.createNewItem = function (object, oauth, created) {
+exports.createNewItem = function (object, user, created) {
     //let myClaims = prepareClaims(obj)
+
+    if (user === undefined) {
+        console.log("Not logged in");
+        // TODO
+        created(false);
+        return;
+    }
 
     console.log("Creating...")
     wbEdit.entity.create({
         descriptions: { it: object.description},
         labels: { it: object.label},
         claims: object.claims
-    }, {credentials: {oauth: oauth}}).then(re => {
+    }, {credentials: {oauth: user.oauth}}).then(re => {
         if (re.success) {
             console.log("Created!");
             created(true);
@@ -201,7 +208,7 @@ function removeDuplicates(wdObj, obj, cb) {
     }
 }
 
-function createEmptyWlmIdOrSkip(object, oauth, cb) {
+function createEmptyWlmIdOrSkip(object, user, cb) {
     let wlmProp = object.claims.P2186;
     if (wlmProp && wlmProp.qualifiers && wlmProp.qualifiers.P580 && wlmProp.value === undefined) {
         console.log("Creating empty P2186 with date qualifier")
@@ -209,13 +216,13 @@ function createEmptyWlmIdOrSkip(object, oauth, cb) {
           id: object.id,
           property: 'P2186',
           value: { snaktype: 'novalue' }
-        }, {credentials: {oauth: oauth}}).then(re => {
+        }, {credentials: {oauth: user.oauth}}).then(re => {
             let claimId = re.claim.id;
             wbEdit.qualifier.set({
               guid: claimId,
               property: 'P580',
               value: wlmProp.qualifiers.P580
-          }, {credentials: {oauth: oauth}}).then(re => {
+          }, {credentials: {oauth: user.oauth}}).then(re => {
               cb();
           })
         })
@@ -224,7 +231,14 @@ function createEmptyWlmIdOrSkip(object, oauth, cb) {
     }
 }
 
-exports.editItem = function (object, oauth, updated) {
+exports.editItem = function (object, user, updated) {
+
+    if (user === undefined) {
+        console.log("Not logged in");
+        // TODO
+        updated(false);
+        return;
+    }
 
     getItem(object.id, function(wdObject) {
         if (wdObject === undefined) {
@@ -236,7 +250,7 @@ exports.editItem = function (object, oauth, updated) {
 
         removeDuplicates(wdObject.entities[object.id].claims, object.claims, function (editObj) {
 
-            createEmptyWlmIdOrSkip(object, oauth, function() {
+            createEmptyWlmIdOrSkip(object, user, function() {
 
                 //let myClaims = prepareClaims(editObj)
 
@@ -249,7 +263,7 @@ exports.editItem = function (object, oauth, updated) {
                     wbEdit.entity.edit({
                       id: object.id,
                       claims: editObj
-                    }, {credentials: {oauth: oauth}}).then(re => {
+                    }, {credentials: {oauth: user.oauth}}).then(re => {
                         if (re.success) {
                             updated(true);
                         } else {

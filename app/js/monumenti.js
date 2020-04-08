@@ -21,9 +21,8 @@ $( "#addMonuButton" ).click(function() {
 
 $.ajax({
     type: "GET",
-    url: "/api/account",
-    success: function(data){
-        let array = data.user.list;
+    url: "/api/list",
+    success: function(array){
         if (array.length > 0) {
             $("#monumentList").append(`<ul>`)
             for (let i = 0; i < array.length; i++) {

@@ -1,7 +1,7 @@
 $('.ui.search')
   .search({
     apiSettings: {
-      url: 'http://localhost:8080/api/suggestion/comune?q={query}'
+      url: '/api/suggestion/comune?q={query}'
     },
     fields: {
       results : 'items',
@@ -10,8 +10,10 @@ $('.ui.search')
     minCharacters : 3,
     onSelect: function(res, resp) {
         $.ajax({
-            type: "GET",
-            url: `/api/store/ente?id=${res.id}`,
+            type: "POST",
+            data: JSON.stringify({id: res.id}),
+            contentType: "application/json",
+            url: `/api/ente`,
             success: function(data){
                 window.location.href = "/upload"
             },
