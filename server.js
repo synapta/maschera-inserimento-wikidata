@@ -102,6 +102,10 @@ app.get('/upload', function (req, res) {
     res.sendFile(__dirname + '/app/upload.html');
 });
 
+app.get('/log', function (req, res) {
+    res.sendFile(__dirname + '/app/log.html');
+});
+
 app.get('/monumenti', function (req, res) {
     if (req.session.list === undefined) {
         req.session.list = [];
