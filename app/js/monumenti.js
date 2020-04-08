@@ -18,3 +18,19 @@ $('.ui.search')
 $( "#addMonuButton" ).click(function() {
     $("#fase2").show();
 });
+
+$.ajax({
+    type: "GET",
+    url: "/api/account",
+    success: function(data){
+        let array = data.user.list;
+        if (array.length > 0) {
+            $("#monumentList").append(`<ul>`)
+            for (let i = 0; i < array.length; i++) {
+                $("#monumentList").append(`<li><a href="/maschera?id=${array[i].id}">${array[i].label}</a>`)
+            }
+            $("#monumentList").append(`</ul>`)
+            $("#finButton").show()
+        }
+    }
+});
