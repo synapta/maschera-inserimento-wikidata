@@ -261,7 +261,7 @@ exports.editItem = function (object, user, updated) {
                 if (Object.entries(editObj).length === 0 && editObj.constructor === Object) {
                     console.log("Skip! Everything already in!");
                     updated(true);
-                    return
+                    return;
                 } else {
                     console.log("Updating...");
                     wbEdit.entity.edit({
@@ -308,3 +308,193 @@ var simpleWikidataSuggestion = function(string, cb) {
    })
 }
 exports.simpleWikidataSuggestion = simpleWikidataSuggestion;
+
+var convertSingleStatementToRaw = function(key, objValue) {
+    let rawObj = {
+        "mainsnak": {
+            "snaktype": "value",
+            "property": key
+        },
+        "type": "statement",
+        "rank": "normal"
+    }
+    switch (key) {
+        case 'P31':
+        case 'P131':
+        case 'P518':
+        case 'P790':
+            rawObj.mainsnak.datavalue = {
+                "value": {
+                    "entity-type": "item",
+                    "numeric-id": parseInt(objValue.replace("Q","")),
+                    "id": objValue
+                },
+                "type": "wikibase-entityid"
+            };
+            rawObj.mainsnak.datatype = "wikibase-item";
+            break;
+        case 'P856':
+            rawObj.mainsnak.datavalue = {
+                "value": objValue,
+                "type": "string"
+            };
+            rawObj.mainsnak.datatype = "url";
+            break;
+        case 'P402':
+            rawObj.mainsnak.datavalue = {
+                "value": objValue,
+                "type": "string"
+            };
+            break;
+        case 'P625':
+            rawObj.mainsnak.datavalue = {
+                "value": objValue,
+                "type": "globecoordinate"
+            };
+            rawObj.mainsnak.datavalue.value.globe = "http://www.wikidata.org/entity/Q2";
+            rawObj.mainsnak.datatype = "globe-coordinate";
+            break;
+        case 'P2186':
+            if (objValue.value !== undefined) {
+                rawObj.mainsnak.datavalue = {
+                    "value": objValue.value,
+                    "type": "string"
+                }
+            } else {
+                rawObj.mainsnak.snaktype = "somevalue";
+            }
+            rawObj.mainsnak.datatype = "external-id";
+            if (objValue.qualifiers && objValue.qualifiers.P580) {
+                rawObj.qualifiers = {
+                    "P580": [
+                        {
+                            "snaktype": "value",
+                            "property": "P580",
+                            "datavalue": {
+                                "value": {
+                                    "time": `+${new Date(objValue.qualifiers.P580).toISOString().split(".")[0]}Z`,
+                                    "timezone": 0,
+                                    "before": 0,
+                                    "after": 0,
+                                    "precision": 9,
+                                    "calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+                                },
+                                "type": "time"
+                            },
+                            "datatype": "time"
+                        }
+                    ]
+                }
+            }
+            break;
+        case 'P6375':
+            rawObj.mainsnak.datavalue = {
+                "value": objValue,
+                "type": "monolingualtext"
+            };
+            rawObj.mainsnak.datatype = "monolingualtext";
+            break;
+    }
+    return rawObj;
+}
+
+var buildRawWikidataObject = function(postObject) {
+    let rawObject = {
+        "claims": []
+    };
+
+    for (var k in postObject) {
+        rawObject.claims.push(convertSingleStatementToRaw(k, postObject[k]));
+    }
+
+    if (postObject.description) {
+        rawObject.descriptions = { it: postObject.description};
+    }
+    if (postObject.label) {
+        rawObject.labels = { it: postObject.label};
+    }
+
+    return rawObject;
+}
+
+exports.anonymousEditItem = function(object, updated) {
+    getItem(object.id, function(wdObject) {
+        if (wdObject === undefined) {
+            updated(false);
+            return;
+        }
+
+        removeDuplicates(wdObject.entities[object.id].claims, object.claims, function (editObj) {
+
+            let wlmProp = object.claims.P2186;
+            if (wlmProp && wlmProp.qualifiers && wlmProp.qualifiers.P580 && wlmProp.value === undefined) {
+                editObj.P2186 = wlmProp;
+            }
+            console.log(JSON.stringify(buildRawWikidataObject(editObj), null, 2))
+
+            if (Object.entries(editObj).length === 0 && editObj.constructor === Object) {
+                console.log("Skip! Everything already in!");
+                updated(true);
+                return;
+            }
+
+            let endpointWikidata = {
+                method: 'POST',
+                url: `https://www.wikidata.org/w/api.php?action=wbeditentity&format=json&languages=it&id=${object.id}`,
+                headers: {
+                  'Content-Type': 'application/x-www-form-urlencoded',
+                  'User-Agent': 'nodejs',
+                },
+                formData: {
+                    'token': '+\\',
+                    'data': JSON.stringify(buildRawWikidataObject(editObj))
+                },
+                timeout: 120000
+            };
+
+            request(endpointWikidata, function(err,res,body){
+                if (err) {
+                    console.log("Error editing item anonymously:\n\n", err);
+                    updated(false);
+                } else {
+                    console.log("Item succesfully edited!")
+                    updated(true);
+                }
+            })
+
+        });
+
+    });
+}
+
+exports.anonymousCreateNewItem = function(object, created) {
+
+    let rawObject = buildRawWikidataObject(object.claims);
+
+    console.log(JSON.stringify(rawObject, null, 2));
+
+    let endpointWikidata = {
+        method: 'POST',
+        url: 'https://www.wikidata.org/w/api.php?action=wbeditentity&format=json&languages=it&new=item',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'User-Agent': 'nodejs',
+        },
+        formData: {
+            'token': '+\\',
+            'data': JSON.stringify()
+        },
+        timeout: 120000
+    };
+
+    request(endpointWikidata, function(err, res, body){
+        if (err) {
+            console.log("Error creating item anonymously:\n\n", err);
+            created(false);
+        } else {
+            console.log("Item succesfully created!")
+            console.log("BODY:", body)
+            created(true);
+        }
+    })
+}
