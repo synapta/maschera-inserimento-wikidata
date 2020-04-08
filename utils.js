@@ -219,7 +219,7 @@ function createEmptyWlmIdOrSkip(object, user, cb) {
         wbEdit.claim.create({
           id: object.id,
           property: 'P2186',
-          value: { snaktype: 'novalue' }
+          value: { snaktype: 'somevalue' }
         }, {credentials: {oauth: user.oauth}}).then(re => {
             let claimId = re.claim.id;
             wbEdit.qualifier.set({
