@@ -22,7 +22,14 @@ $( "#addMonuButton" ).click(function() {
 $.ajax({
     type: "GET",
     url: "/api/list",
-    success: function(array){
+    success: function(array) {
+        //remove duplicates!
+        array = array.filter((thing, index, self) =>
+          index === self.findIndex((t) => (
+            t.label === thing.label && t.id === thing.id
+          ))
+        )
+        
         if (array.length > 0) {
             $("#monumentList").append(`<ul>`)
             for (let i = 0; i < array.length; i++) {

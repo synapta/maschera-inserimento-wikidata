@@ -103,10 +103,9 @@ document.getElementById("sendMaschera").addEventListener("click", function () {
       type: "POST",
       url: api,
       contentType: 'application/json',
-      dataType: 'json',
       data: JSON.stringify(mainObject),
       success: function(data) {
-          alert("OK")
+          document.location.href = '/monumenti';
       },
       error: function(err) {
           console.log(err)

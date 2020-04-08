@@ -139,6 +139,10 @@ app.get('/api/ente', function (req, res) {
     res.json(req.session.ente);
 });
 
+app.get('/api/account', function (req, res) {
+    res.json(req.user);
+});
+
 app.post('/api/ente', function (req, res) {
     console.log(req.body);
     req.session.ente = req.body.id;
