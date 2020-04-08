@@ -36,14 +36,10 @@ passport.use(new MediaWikiStrategy({
     }
 ));
 
-const config = {
-    instance: 'https://www.wikidata.org/w/api.php'
-}
-const wdEdit = require('wikibase-edit')(config);
-const utils = require('./utils');
 const Client = require('nextcloud-node-client').Client;
 const nextcloud = new Client();
 const fileUpload = require('express-fileupload');
+const utils = require('./utils');
 
 const app = express();
 
@@ -144,8 +140,8 @@ app.get('/api/suggestion/comune', function (req, res) {
     res.status(200).send(matchComuni);
 });
 
-app.get('/api/suggestion/generic', function(req, res) {
-    utils.simpleWikidataSuggestion(req.query.q, function(result) {
+app.get('/api/suggestion/generic', function (req, res) {
+    utils.simpleWikidataSuggestion(req.query.q, function (result) {
         if (result) {
             if (result.error) {
                 res.status(404).send("Not Found");
@@ -212,8 +208,8 @@ app.get('/api/entity/get', function (req, res) {
 });
 
 app.post('/api/entity/edit', function (req, res) {
-    req.user.list.push({'id':req.body.entity.id, 'label':req.body.entity.label});
-    utils.editItem(req.body.entity, function (success) {
+    req.user.list.push({ 'id': req.body.entity.id, 'label': req.body.entity.label });
+    utils.editItem(req.body.entity, req.user.oauth, function (success) {
         if (success) {
             res.status(200).send("OK");
         } else {
@@ -224,7 +220,7 @@ app.post('/api/entity/edit', function (req, res) {
 
 app.post('/api/entity/create', function (req, res) {
     req.user.list.push(req.body.entity.id);
-    utils.createNewItem(req.body.entity, function (success) {
+    utils.createNewItem(req.body.entity, req.user.oauth, function (success) {
         if (success) {
             res.status(200).send("OK");
         } else {
