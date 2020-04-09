@@ -92,7 +92,7 @@ function ensureAuthenticated(req, res, next) {
     if (req.session.username) {
         return next();
     }
-    res.redirect('/login');
+    res.redirect('/login?error');
 }
 
 app.get('/logout', function (req, res) {
