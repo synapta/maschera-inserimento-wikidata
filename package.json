@@ -11,7 +11,7 @@
     "passport-anonymous": "^1.0.1",
     "passport-mediawiki-oauth": "^0.1.0",
     "request": "^2.88.2",
-    "wikibase-edit": "latest",
+    "wikibase-edit": "^4.2.0",
     "winston": "^3.2.1",
     "winston-better-sqlite3": "git+https://github.com/ed4becky/winston-better-sqlite3.git"
   }
