@@ -119,6 +119,15 @@ function prepareClaims(obj) {
     return myClaims;
 }
 
+/**
+ * Creates a brand new item on wikidata with the properties, labels and descriptions
+ * specified in the request body.
+ *
+ * @param  {object}     object  request body.
+ * @param  {object}     user    request user (undefined if not logged in).
+ * @param  {Function}   created callback function.
+ * @return {boolean}            successful request.
+ */
 exports.createNewItem = function (object, user, created) {
 
     let requestConfig;
@@ -133,6 +142,10 @@ exports.createNewItem = function (object, user, created) {
         requestConfig = {
             anonymous: true
         };
+    }
+
+    if (object.claims.P2186 && object.claims.P2186.value === undefined) {
+        object.claims.P2186.snaktype = "somevalue";
     }
 
     console.log("Creating...")
@@ -156,23 +169,45 @@ exports.createNewItem = function (object, user, created) {
     });
 }
 
-function checkSameProperties(propName, wdProp, curProp) {
+/**
+ * Compares the values of two sampe properties. The one from  wikidata property
+ * needs to be simplified and its value extracted from the object. Returns an Array
+ * containing only the properties that needs to be added to wikidata.
+ *
+ * @param  {string} propName name of the property, i.e. P31.
+ * @param  {object} wdProp   wikidata representation of the property.
+ * @param  {string|array|object} curProp  value of the property in the request body.
+ * @return {array}          list of filtered properties that should be added to wikidata.
+ */
+function filterProperties(propName, wdProp, curProp) {
     let wdValue = wbk.simplify.propertyClaims(wdProp);
     let curValueArr = Array.isArray(curProp) ? curProp : [curProp];
 
-    let result;
+    let result = [];
+
+    // some properties accept an array of values (i.e. "P518": ["Q1385033", "Q183061"]).
+    // In that case, each value is treated searately and matched against all the
+    // existing wikidata values.
+    //
+    // i.e.
+    //  wdValue = ["Q1385033", "Q183061"]
+    //  curValueArr = ["Q1385033", "Q183061", "Q1107656"]
+    //                   ↑match     ↑match     ↑no match
+    //
+    //  ==> result = ["Q1107656"]
     for (let i = 0; i<curValueArr.length; i++) {
+        let curResult;
         let curValue = curValueArr[i];
 
         switch(propName) {
             case 'P6375':
-                result = wdValue.includes(curValue.text);
+                curResult = wdValue.includes(curValue.text);
                 break;
             case 'P625':
-                result = false;
+                curResult = false;
                 for (let i=0; i<wdValue.length; i++) {
                     if (wdValue[i][0] === curValue.latitude && wdValue[i][1] === curValue.longitude) {
-                        result = true;
+                        curResult = true;
                     }
                 }
                 break;
@@ -184,41 +219,61 @@ function checkSameProperties(propName, wdProp, curProp) {
                             wdQual = wbk.simplify.propertyQualifiers(wdProp[index].qualifiers.P580)[0].split("T")[0];
                         }
                         if (wdQual === undefined) {
-                            result = false;
+                            curResult = false;
                         } else {
-                            result = curProp.qualifiers.P580 === wdQual;
+                            curResult = curProp.qualifiers.P580 === wdQual;
                         }
                     }
                 } else {
-                    result = false;
+                    curResult = false;
                 }
                 break;
             default:
-                result = wdValue.includes(curValue);
+                curResult = wdValue.includes(curValue);
+        }
+        if (!curResult) {
+            // if the current value of the property does not match (= there is no
+            // property in wikidata with that value), add it to the returned object
+            result.push(curValue);
         }
     }
     return result;
 }
 
+/**
+ * For each property in the request body (body.entity.claims), check whether a
+ * property with the same value already exists in wikidata. If so, removes that
+ * property from the request body.
+ *
+ * @param  {object}     wdObj list of properties already in wikidata.
+ * @param  {object}     obj   list of properties we are trying to add.
+ * @param  {Function}   cb    callback function.
+ * @return {object}           filtered object.
+ */
 function removeDuplicates(wdObj, obj, cb) {
     let totalKeys = Object.keys(obj).length;
     let currKey = 0;
     let newObj = {};
+
+    // iterate over all the properties of the request body
     for (var k in obj) {
         if (k === 'P2186' && obj[k].value === undefined) {
-            currKey++;
-            continue;
+            newObj[k] = obj[k];
+            newObj[k].snaktype = "somevalue";
+            if (++currKey === totalKeys) {
+                cb(newObj);
+            } else {
+                continue;
+            }
         }
         if (!Object.keys(wdObj).includes(k)) {
             newObj[k] = obj[k];
         } else {
-            if (!checkSameProperties(k, wdObj[k], obj[k])) {
-                if (Array.isArray(obj[k])) {
-                    let wdValues = wbk.simplify.propertyClaims(wdObj[k]);
-                    newObj[k] = obj[k].filter(e => !wdValues.includes(e));
-                } else {
-                    newObj[k] = obj[k];
-                }
+            let resArray = filterProperties(k, wdObj[k], obj[k]);
+
+            // add to the filtered body only if the result is not empty
+            if (resArray.length > 0) {
+                newObj[k] = resArray;
             }
         }
         if (++currKey === totalKeys) {
@@ -227,29 +282,16 @@ function removeDuplicates(wdObj, obj, cb) {
     }
 }
 
-function createEmptyWlmIdOrSkip(object, user, cb) {
-    let wlmProp = object.claims.P2186;
-    if (wlmProp && wlmProp.qualifiers && wlmProp.qualifiers.P580 && wlmProp.value === undefined) {
-        console.log("Creating empty P2186 with date qualifier")
-        wbEdit.claim.create({
-          id: object.id,
-          property: 'P2186',
-          value: { snaktype: 'somevalue' }
-        }, {credentials: {oauth: user.oauth}}).then(re => {
-            let claimId = re.claim.id;
-            wbEdit.qualifier.set({
-              guid: claimId,
-              property: 'P580',
-              value: wlmProp.qualifiers.P580
-          }, {credentials: {oauth: user.oauth}}).then(re => {
-              cb();
-          })
-        })
-    } else {
-        cb();
-    }
-}
-
+/**
+ * Performs an edit on an item aready existing in wikidata. First check whether
+ * the item exists, then filters out properties whose values already exists for
+ * the item, then performs the actual edit request.
+ *
+ * @param  {object}     object  request body.
+ * @param  {object}     user    request user (undefined if not logged in).
+ * @param  {Function}   updated callback function.
+ * @return {boolean}            successful request.
+ */
 exports.editItem = function (object, user, updated) {
 
     let requestConfig;
@@ -274,35 +316,31 @@ exports.editItem = function (object, user, updated) {
 
         removeDuplicates(wdObject.entities[object.id].claims, object.claims, function (editObj) {
 
-            console.log(JSON.stringify(editObj, null, 2))
+            console.log(JSON.stringify(editObj, null, 2));
 
-            createEmptyWlmIdOrSkip(object, user, function() {
-
-                if (Object.entries(editObj).length === 0 && editObj.constructor === Object) {
-                    console.log("Skip! Everything already in!");
-                    updated(true);
-                    return;
-                } else {
-                    console.log("Updating...");
-                    wbEdit.entity.edit({
-                      id: object.id,
-                      claims: editObj
-                  }, requestConfig).then(re => {
-                        if (re.success) {
-                            updated(true);
-                        } else {
-                            console.error(re);
-                            updated(false);
-                        }
-                    }).catch(err => {
-                        console.log("Something wrong!");
-                        console.log(err);
-                        console.log(editObj);
+            if (Object.entries(editObj).length === 0 && editObj.constructor === Object) {
+                console.log("Skip! Everything already in!");
+                updated(true);
+                return;
+            } else {
+                console.log("Updating...");
+                wbEdit.entity.edit({
+                  id: object.id,
+                  claims: editObj
+              }, requestConfig).then(re => {
+                    if (re.success) {
+                        updated(true);
+                    } else {
+                        console.error(re);
                         updated(false);
-                    });
-                }
-
-            });
+                    }
+                }).catch(err => {
+                    console.log("Something wrong!");
+                    console.log(err);
+                    console.log("\nCLAIMS:\n",editObj);
+                    updated(false);
+                });
+            }
         });
     });
 }
