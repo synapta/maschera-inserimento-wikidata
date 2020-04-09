@@ -8,8 +8,11 @@
     "morgan": "^1.10.0",
     "nextcloud-node-client": "^1.1.6",
     "passport": "^0.4.1",
+    "passport-anonymous": "^1.0.1",
     "passport-mediawiki-oauth": "^0.1.0",
     "request": "^2.88.2",
-    "wikibase-edit": "^4.2.0"
+    "wikibase-edit": "^4.2.0",
+    "winston": "^3.2.1",
+    "winston-better-sqlite3": "git+https://github.com/ed4becky/winston-better-sqlite3.git"
   }
 }

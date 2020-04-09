@@ -11,7 +11,7 @@ $('.ui.search')
     onSelect: function(res, resp) {
         $.ajax({
             type: "POST",
-            data: JSON.stringify({id: res.id}),
+            data: JSON.stringify({id: res.id, title: res.title}),
             contentType: "application/json",
             url: `/api/ente`,
             success: function(data){
