@@ -308,8 +308,20 @@ app.post('/api/entity/create', ensureAuthenticated, function (req, res) {
     });
 });
 
-app.get('/api/log', function (req, res) {
-    const rows = database.prepare('SELECT * FROM log ORDER BY id DESC').all();
+app.get('/api/registro', function (req, res) {
+    let page = 0;
+    if (req.query.page !== undefined) {
+        page = parseInt(req.query.page);
+    }
+
+    let limit = 100;
+    if (req.query.limit !== undefined) {
+        limit = parseInt(req.query.limit);
+    }
+
+    let offset = limit * page;
+
+    const rows = database.prepare('SELECT * FROM log ORDER BY id DESC LIMIT ? OFFSET ?').all(limit, offset);
     res.json(rows);
 });
 
