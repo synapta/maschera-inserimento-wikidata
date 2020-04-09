@@ -10,6 +10,6 @@
     "passport": "^0.4.1",
     "passport-mediawiki-oauth": "^0.1.0",
     "request": "^2.88.2",
-    "wikibase-edit": "latest"
+    "wikibase-edit": "^4.2.0"
   }
 }

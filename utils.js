@@ -121,12 +121,18 @@ function prepareClaims(obj) {
 
 exports.createNewItem = function (object, user, created) {
 
-    if (user === undefined) {
-        console.log("Not logged in, proceeding with anonymous request.");
-        anonymousCreateNewItem(object, function(res) {
-            created(res);
-        });
-        return;
+    let requestConfig;
+    if (user !== undefined) {
+        requestConfig = {
+            credentials: {
+                oauth: user.oauth
+            }
+        };
+    } else {
+        console.log("Not logged in, proceeding with anonymous request.")
+        requestConfig = {
+            anonymous: true
+        };
     }
 
     console.log("Creating...")
@@ -134,7 +140,7 @@ exports.createNewItem = function (object, user, created) {
         descriptions: { it: object.description},
         labels: { it: object.label},
         claims: object.claims
-    }, {credentials: {oauth: user.oauth}}).then(re => {
+    }, requestConfig).then(re => {
         if (re.success) {
             console.log("Created!");
             created(true);
@@ -246,12 +252,18 @@ function createEmptyWlmIdOrSkip(object, user, cb) {
 
 exports.editItem = function (object, user, updated) {
 
-    if (user === undefined) {
-        console.log("Not logged in, proceeding with anonymous request.");
-        anonymousEditItem(object, function(res) {
-            updated(res);
-        });
-        return;
+    let requestConfig;
+    if (user !== undefined) {
+        requestConfig = {
+            credentials: {
+                oauth: user.oauth
+            }
+        };
+    } else {
+        console.log("Not logged in, proceeding with anonymous request.")
+        requestConfig = {
+            anonymous: true
+        };
     }
 
     getItem(object.id, function(wdObject) {
@@ -259,7 +271,6 @@ exports.editItem = function (object, user, updated) {
             updated(false);
             return;
         }
-
 
         removeDuplicates(wdObject.entities[object.id].claims, object.claims, function (editObj) {
 
@@ -276,7 +287,7 @@ exports.editItem = function (object, user, updated) {
                     wbEdit.entity.edit({
                       id: object.id,
                       claims: editObj
-                    }, {credentials: {oauth: user.oauth}}).then(re => {
+                  }, requestConfig).then(re => {
                         if (re.success) {
                             updated(true);
                         } else {
