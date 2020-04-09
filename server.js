@@ -59,6 +59,8 @@ const logger = winston.createLogger({
     ]
 });
 
+const database = require('better-sqlite3')('log.sqlite', { readonly: true });
+
 const app = express();
 
 app.use(session({
@@ -304,6 +306,11 @@ app.post('/api/entity/create', ensureAuthenticated, function (req, res) {
             res.status(500).send("Error");
         }
     });
+});
+
+app.get('/api/log', function (req, res) {
+    const rows = database.prepare('SELECT * FROM log ORDER BY id DESC').all();
+    res.json(rows);
 });
 
 let port = 8080;
