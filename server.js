@@ -54,7 +54,7 @@ const logger = winston.createLogger({
     transports: [
         new wbs({
             db: 'log.sqlite',
-            params: ['level', 'action', 'user', 'target', 'message']
+            params: ['action', 'user', 'target', 'label']
         })
     ]
 });
@@ -124,7 +124,6 @@ app.get('/auth/mediawiki/callback',
     function (req, res) {
         req.session.username = req.user.displayName;
         logger.log({
-            level: 'info',
             action: 'login',
             user: req.session.username
         });
@@ -169,7 +168,6 @@ app.post('/api/upload', ensureAuthenticated, async function (req, res) {
         const folder = await nextcloud.getFolder("/");
         await folder.createFile(Date.now() + "-" + upload.name, upload.data);
         logger.log({
-            level: 'info',
             action: 'upload',
             user: req.session.username,
             target: upload.name
@@ -191,11 +189,10 @@ app.get('/api/account', ensureAuthenticated, function (req, res) {
 app.post('/api/ente', ensureAuthenticated, function (req, res) {
     req.session.ente = req.body.id;
     logger.log({
-        level: 'info',
         action: 'ente',
         user: req.session.username,
         target: req.session.ente,
-        message: req.body.title
+        label: req.body.title
     });
     res.status(200).send("Saved");
 });
@@ -278,11 +275,10 @@ function addEntity(session, entity) {
     }
     session.list.push({ 'id': entity.id, 'label': entity.label });
     logger.log({
-        level: 'info',
         action: 'entity',
         user: session.username,
         target: entity.id,
-        message: entity.label
+        label: entity.label
     });
 }
 

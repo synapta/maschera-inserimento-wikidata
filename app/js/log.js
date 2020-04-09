@@ -18,11 +18,11 @@ $(function () {
             case 'login':
                 return ' si è autenticato';
             case 'ente':
-                return ' ha scelto l\'ente <a target=\'_black\' href="https://www.wikidata.org/wiki/' + this.target + '">' + this.message + '</a>';
+                return ' ha scelto l\'ente <a target=\'_black\' href="https://www.wikidata.org/wiki/' + this.target + '">' + this.label + '</a>';
             case 'upload':
                 return ' caricato il file ' + this.target;
             case 'entity':
-                return ' ha modificato il monumento <a target=\'_black\' href="https://www.wikidata.org/wiki/' + this.target + '">' + this.message + '</a>';
+                return ' ha modificato il monumento <a target=\'_black\' href="https://www.wikidata.org/wiki/' + this.target + '">' + this.label + '</a>';
             default:
                 return '';
         }
