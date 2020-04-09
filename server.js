@@ -68,7 +68,7 @@ app.use(session({
     store: new MemoryStore({
         checkPeriod: 86400000
     }),
-    secret: 'keyboard cat', // TODO
+    secret: process.env.MEDIAWIKI_CONSUMER_SECRET,
     resave: false,
     saveUninitialized: true
 }));
