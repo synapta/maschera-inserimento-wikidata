@@ -47,6 +47,31 @@ exports.sparqlQueryMonuments = function(id) {
     `;
 }
 
+exports.sparqlQueryMonumentsNoId = function() {
+    return `
+    SELECT ?item ?itemLabel ?comune ?comuneLabel
+    WHERE
+    {
+        ?item wdt:P2186 ?wlmId .
+        FILTER isBLANK(?wlmId) .
+        OPTIONAL { ?item wdt:P131 ?comune . }
+        SERVICE wikibase:label { bd:serviceParam wikibase:language "it". }
+    }
+    `;
+}
+
+exports.getSparqlRequestOptions = function(query) {
+    return {
+        method: 'GET',
+        url: "https://query.wikidata.org/sparql?query=" + encodeURIComponent(query),
+        headers: {
+            'Accept': 'application/sparql-results+json',
+            'User-Agent': 'nodejs'
+        },
+        timeout: 120000
+    };
+}
+
 exports.suggestComuni = function(query, cb) {
     if (query.length > 1) {
         //return COMUNI_NOMI.filter(c => c.toLowerCase().startsWith(query.toLowerCase()));

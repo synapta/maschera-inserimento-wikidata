@@ -237,16 +237,8 @@ app.get('/api/query/comune', function (req, res) {
             res.status(404).send("Not Found");
             return;
         }
-
-        let endpointWikidata = {
-            method: 'GET',
-            url: "https://query.wikidata.org/sparql?query=" + encodeURIComponent(utils.sparqlQueryMonuments(pageId)),
-            headers: {
-                'Accept': 'application/sparql-results+json',
-                'User-Agent': 'nodejs'
-            },
-            timeout: 120000
-        };
+        
+        let endpointWikidata = utils.getSparqlRequestOptions(utils.sparqlQueryMonuments(pageId));
 
         request(endpointWikidata, function (error, resp, body) {
             if (error) {
@@ -257,6 +249,19 @@ app.get('/api/query/comune', function (req, res) {
             }
         });
     })
+});
+
+app.get('/api/query/monumentiSenzaId', function(req, res) {
+    let endpointWikidata = utils.getSparqlRequestOptions(utils.sparqlQueryMonumentsNoId());
+
+    request(endpointWikidata, function (error, resp, body) {
+        if (error) {
+            console.log("Error retrieving monuments list:\n\n", error)
+            res.status(500).send("Error retrieving monuments list:\n\n", error);
+        } else {
+            res.status(200).send(JSON.parse(body).results.bindings);
+        }
+    });
 });
 
 app.get('/api/entity/get', function (req, res) {
