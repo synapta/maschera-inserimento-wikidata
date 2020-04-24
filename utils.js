@@ -47,6 +47,31 @@ exports.sparqlQueryMonuments = function(id) {
     `;
 }
 
+exports.sparqlQueryMonumentsNoId = function() {
+    return `
+    SELECT ?item ?itemLabel ?comune ?comuneLabel
+    WHERE
+    {
+        ?item wdt:P2186 ?wlmId .
+        FILTER isBLANK(?wlmId) .
+        OPTIONAL { ?item wdt:P131 ?comune . }
+        SERVICE wikibase:label { bd:serviceParam wikibase:language "it". }
+    }
+    `;
+}
+
+exports.getSparqlRequestOptions = function(query) {
+    return {
+        method: 'GET',
+        url: "https://query.wikidata.org/sparql?query=" + encodeURIComponent(query),
+        headers: {
+            'Accept': 'application/sparql-results+json',
+            'User-Agent': 'nodejs'
+        },
+        timeout: 120000
+    };
+}
+
 exports.suggestComuni = function(query, cb) {
     if (query.length > 1) {
         //return COMUNI_NOMI.filter(c => c.toLowerCase().startsWith(query.toLowerCase()));
@@ -119,14 +144,33 @@ function prepareClaims(obj) {
     return myClaims;
 }
 
+/**
+ * Creates a brand new item on wikidata with the properties, labels and descriptions
+ * specified in the request body.
+ *
+ * @param  {object}     object  request body.
+ * @param  {object}     user    request user (undefined if not logged in).
+ * @param  {Function}   created callback function.
+ * @return {boolean}            successful request.
+ */
 exports.createNewItem = function (object, user, created) {
-    //let myClaims = prepareClaims(obj)
 
-    if (user === undefined) {
-        console.log("Not logged in");
-        // TODO
-        created(false);
-        return;
+    let requestConfig;
+    if (user !== undefined) {
+        requestConfig = {
+            credentials: {
+                oauth: user.oauth
+            }
+        };
+    } else {
+        console.log("Not logged in, proceeding with anonymous request.")
+        requestConfig = {
+            anonymous: true
+        };
+    }
+
+    if (object.claims.P2186 && object.claims.P2186.value === undefined) {
+        object.claims.P2186.snaktype = "somevalue";
     }
 
     console.log("Creating...")
@@ -134,7 +178,7 @@ exports.createNewItem = function (object, user, created) {
         descriptions: { it: object.description},
         labels: { it: object.label},
         claims: object.claims
-    }, {credentials: {oauth: user.oauth}}).then(re => {
+    }, requestConfig).then(re => {
         if (re.success) {
             console.log("Created!");
             created(true);
@@ -150,60 +194,111 @@ exports.createNewItem = function (object, user, created) {
     });
 }
 
-function checkSameProperties(propName, wdProp, curProp) {
+/**
+ * Compares the values of two sampe properties. The one from  wikidata property
+ * needs to be simplified and its value extracted from the object. Returns an Array
+ * containing only the properties that needs to be added to wikidata.
+ *
+ * @param  {string} propName name of the property, i.e. P31.
+ * @param  {object} wdProp   wikidata representation of the property.
+ * @param  {string|array|object} curProp  value of the property in the request body.
+ * @return {array}          list of filtered properties that should be added to wikidata.
+ */
+function filterProperties(propName, wdProp, curProp) {
     let wdValue = wbk.simplify.propertyClaims(wdProp);
-    let curValue = curProp;
+    let curValueArr = Array.isArray(curProp) ? curProp : [curProp];
 
-    let result;
-    switch(propName) {
-        case 'P6375':
-            result = wdValue.includes(curValue.text);
-            break;
-        case 'P625':
-            result = false;
-            for (let i=0; i<wdValue.length; i++) {
-                if (wdValue[i][0] === curValue.latitude && wdValue[i][1] === curValue.longitude) {
-                    result = true;
-                }
-            }
-            break;
-        case 'P2186':
-            if (wdValue.includes(curValue.value)) {
-                if (curProp.qualifiers && curProp.qualifiers.P580) {
-                    let wdQual = undefined, index = wdValue.indexOf(curValue.value);
-                    if (wdProp[index].qualifiers && wdProp[index].qualifiers.P580) {
-                        wdQual = wbk.simplify.propertyQualifiers(wdProp[index].qualifiers.P580)[0].split("T")[0];
+    let result = [];
+
+    // some properties accept an array of values (i.e. "P518": ["Q1385033", "Q183061"]).
+    // In that case, each value is treated searately and matched against all the
+    // existing wikidata values.
+    //
+    // i.e.
+    //  wdValue = ["Q1385033", "Q183061"]
+    //  curValueArr = ["Q1385033", "Q183061", "Q1107656"]
+    //                   ↑match     ↑match     ↑no match
+    //
+    //  ==> result = ["Q1107656"]
+    for (let i = 0; i<curValueArr.length; i++) {
+        let curResult;
+        let curValue = curValueArr[i];
+
+        switch(propName) {
+            case 'P6375':
+                curResult = wdValue.includes(curValue.text);
+                break;
+            case 'P625':
+                curResult = false;
+                for (let i=0; i<wdValue.length; i++) {
+                    if (wdValue[i][0] === curValue.latitude && wdValue[i][1] === curValue.longitude) {
+                        curResult = true;
                     }
-                    if (wdQual === undefined) {
-                        result = false;
-                    } else {
-                        result = curProp.qualifiers.P580 === wdQual;
-                    }
                 }
-            } else {
-                result = false;
-            }
-            break;
-        default:
-            result = wdValue.includes(curValue);
+                break;
+            case 'P2186':
+                if (wdValue.includes(curValue.value)) {
+                    if (curProp.qualifiers && curProp.qualifiers.P580) {
+                        let wdQual = undefined, index = wdValue.indexOf(curValue.value);
+                        if (wdProp[index].qualifiers && wdProp[index].qualifiers.P580) {
+                            wdQual = wbk.simplify.propertyQualifiers(wdProp[index].qualifiers.P580)[0].split("T")[0];
+                        }
+                        if (wdQual === undefined) {
+                            curResult = false;
+                        } else {
+                            curResult = curProp.qualifiers.P580 === wdQual;
+                        }
+                    }
+                } else {
+                    curResult = false;
+                }
+                break;
+            default:
+                curResult = wdValue.includes(curValue);
+        }
+        if (!curResult) {
+            // if the current value of the property does not match (= there is no
+            // property in wikidata with that value), add it to the returned object
+            result.push(curValue);
+        }
     }
     return result;
 }
 
+/**
+ * For each property in the request body (body.entity.claims), check whether a
+ * property with the same value already exists in wikidata. If so, removes that
+ * property from the request body.
+ *
+ * @param  {object}     wdObj list of properties already in wikidata.
+ * @param  {object}     obj   list of properties we are trying to add.
+ * @param  {Function}   cb    callback function.
+ * @return {object}           filtered object.
+ */
 function removeDuplicates(wdObj, obj, cb) {
     let totalKeys = Object.keys(obj).length;
     let currKey = 0;
     let newObj = {};
+
+    // iterate over all the properties of the request body
     for (var k in obj) {
         if (k === 'P2186' && obj[k].value === undefined) {
-            currKey++;
-            continue;
+            newObj[k] = obj[k];
+            newObj[k].snaktype = "somevalue";
+            if (++currKey === totalKeys) {
+                cb(newObj);
+            } else {
+                continue;
+            }
         }
         if (!Object.keys(wdObj).includes(k)) {
             newObj[k] = obj[k];
         } else {
-            if (!checkSameProperties(k, wdObj[k], obj[k])) {
-                newObj[k] = obj[k];
+            let resArray = filterProperties(k, wdObj[k], obj[k]);
+
+            // add to the filtered body only if the result is not empty
+            if (resArray.length > 0) {
+                newObj[k] = resArray;
             }
         }
         if (++currKey === totalKeys) {
@@ -212,36 +307,30 @@ function removeDuplicates(wdObj, obj, cb) {
     }
 }
 
-function createEmptyWlmIdOrSkip(object, user, cb) {
-    let wlmProp = object.claims.P2186;
-    if (wlmProp && wlmProp.qualifiers && wlmProp.qualifiers.P580 && wlmProp.value === undefined) {
-        console.log("Creating empty P2186 with date qualifier")
-        wbEdit.claim.create({
-          id: object.id,
-          property: 'P2186',
-          value: { snaktype: 'somevalue' }
-        }, {credentials: {oauth: user.oauth}}).then(re => {
-            let claimId = re.claim.id;
-            wbEdit.qualifier.set({
-              guid: claimId,
-              property: 'P580',
-              value: wlmProp.qualifiers.P580
-          }, {credentials: {oauth: user.oauth}}).then(re => {
-              cb();
-          })
-        })
-    } else {
-        cb();
-    }
-}
-
+/**
+ * Performs an edit on an item aready existing in wikidata. First check whether
+ * the item exists, then filters out properties whose values already exists for
+ * the item, then performs the actual edit request.
+ *
+ * @param  {object}     object  request body.
+ * @param  {object}     user    request user (undefined if not logged in).
+ * @param  {Function}   updated callback function.
+ * @return {boolean}            successful request.
+ */
 exports.editItem = function (object, user, updated) {
 
-    if (user === undefined) {
-        console.log("Not logged in");
-        // TODO
-        updated(false);
-        return;
+    let requestConfig;
+    if (user !== undefined) {
+        requestConfig = {
+            credentials: {
+                oauth: user.oauth
+            }
+        };
+    } else {
+        console.log("Not logged in, proceeding with anonymous request.")
+        requestConfig = {
+            anonymous: true
+        };
     }
 
     getItem(object.id, function(wdObject) {
@@ -250,39 +339,33 @@ exports.editItem = function (object, user, updated) {
             return;
         }
 
-        console.log(JSON.stringify(object, null, 2))
-
         removeDuplicates(wdObject.entities[object.id].claims, object.claims, function (editObj) {
 
-            createEmptyWlmIdOrSkip(object, user, function() {
+            console.log(JSON.stringify(editObj, null, 2));
 
-                //let myClaims = prepareClaims(editObj)
-
-                if (Object.entries(editObj).length === 0 && editObj.constructor === Object) {
-                    console.log("Skip! Everything already in!");
-                    updated(true);
-                    return
-                } else {
-                    console.log("Updating...");
-                    wbEdit.entity.edit({
-                      id: object.id,
-                      claims: editObj
-                    }, {credentials: {oauth: user.oauth}}).then(re => {
-                        if (re.success) {
-                            updated(true);
-                        } else {
-                            console.error(re);
-                            updated(false);
-                        }
-                    }).catch(err => {
-                        console.log("Something wrong!");
-                        console.log(err);
-                        console.log(editObj);
+            if (Object.entries(editObj).length === 0 && editObj.constructor === Object) {
+                console.log("Skip! Everything already in!");
+                updated(true);
+                return;
+            } else {
+                console.log("Updating...");
+                wbEdit.entity.edit({
+                  id: object.id,
+                  claims: editObj
+              }, requestConfig).then(re => {
+                    if (re.success) {
+                        updated(true);
+                    } else {
+                        console.error(re);
                         updated(false);
-                    });
-                }
-
-            });
+                    }
+                }).catch(err => {
+                    console.log("Something wrong!");
+                    console.log(err);
+                    console.log("\nCLAIMS:\n",editObj);
+                    updated(false);
+                });
+            }
         });
     });
 }
@@ -308,3 +391,205 @@ var simpleWikidataSuggestion = function(string, cb) {
    })
 }
 exports.simpleWikidataSuggestion = simpleWikidataSuggestion;
+
+var convertSingleStatementToRaw = function(key, objValue) {
+    let rawObj = {
+        "mainsnak": {
+            "snaktype": "value",
+            "property": key
+        },
+        "type": "statement",
+        "rank": "normal"
+    }
+    switch (key) {
+        case 'P31':
+        case 'P131':
+        case 'P518':
+        case 'P790':
+            rawObj.mainsnak.datavalue = {
+                "value": {
+                    "entity-type": "item",
+                    "numeric-id": parseInt(objValue.replace("Q","")),
+                    "id": objValue
+                },
+                "type": "wikibase-entityid"
+            };
+            rawObj.mainsnak.datatype = "wikibase-item";
+            break;
+        case 'P856':
+            rawObj.mainsnak.datavalue = {
+                "value": objValue,
+                "type": "string"
+            };
+            rawObj.mainsnak.datatype = "url";
+            break;
+        case 'P402':
+            rawObj.mainsnak.datavalue = {
+                "value": objValue,
+                "type": "string"
+            };
+            break;
+        case 'P625':
+            rawObj.mainsnak.datavalue = {
+                "value": objValue,
+                "type": "globecoordinate"
+            };
+            rawObj.mainsnak.datavalue.value.globe = "http://www.wikidata.org/entity/Q2";
+            rawObj.mainsnak.datatype = "globe-coordinate";
+            break;
+        case 'P2186':
+            if (objValue.value !== undefined) {
+                rawObj.mainsnak.datavalue = {
+                    "value": objValue.value,
+                    "type": "string"
+                }
+            } else {
+                rawObj.mainsnak.snaktype = "somevalue";
+            }
+            rawObj.mainsnak.datatype = "external-id";
+            if (objValue.qualifiers && objValue.qualifiers.P580) {
+                rawObj.qualifiers = {
+                    "P580": [
+                        {
+                            "snaktype": "value",
+                            "property": "P580",
+                            "datavalue": {
+                                "value": {
+                                    "time": `+${new Date(objValue.qualifiers.P580).toISOString().split(".")[0]}Z`,
+                                    "timezone": 0,
+                                    "before": 0,
+                                    "after": 0,
+                                    "precision": 9,
+                                    "calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+                                },
+                                "type": "time"
+                            },
+                            "datatype": "time"
+                        }
+                    ]
+                }
+            }
+            break;
+        case 'P6375':
+            rawObj.mainsnak.datavalue = {
+                "value": objValue,
+                "type": "monolingualtext"
+            };
+            rawObj.mainsnak.datatype = "monolingualtext";
+            break;
+    }
+    return rawObj;
+}
+
+var buildRawWikidataObject = function(postObject) {
+    let rawObject = {
+        "claims": []
+    };
+
+    for (var k in postObject) {
+        let values = Array.isArray(postObject[k]) ? postObject[k] : [postObject[k]];
+        for (let i=0; i<values.length; i++) {
+            rawObject.claims.push(convertSingleStatementToRaw(k, values[i]));
+        }
+    }
+
+    if (postObject.description) {
+        rawObject.descriptions = { it: postObject.description};
+    }
+    if (postObject.label) {
+        rawObject.labels = { it: postObject.label};
+    }
+
+    return rawObject;
+}
+
+var anonymousEditItem = function(object, updated) {
+    getItem(object.id, function(wdObject) {
+        if (wdObject === undefined) {
+            updated(false);
+            return;
+        }
+
+        removeDuplicates(wdObject.entities[object.id].claims, object.claims, function (editObj) {
+
+            let wlmProp = object.claims.P2186;
+            if (wlmProp && wlmProp.qualifiers && wlmProp.qualifiers.P580 && wlmProp.value === undefined) {
+                editObj.P2186 = wlmProp;
+            }
+            console.log(JSON.stringify(buildRawWikidataObject(editObj), null, 2))
+
+            if (Object.entries(editObj).length === 0 && editObj.constructor === Object) {
+                console.log("Skip! Everything already in!");
+                updated(true);
+                return;
+            }
+
+            let endpointWikidata = {
+                method: 'POST',
+                url: `https://www.wikidata.org/w/api.php?action=wbeditentity&format=json&languages=it&id=${object.id}`,
+                headers: {
+                  'Content-Type': 'application/x-www-form-urlencoded',
+                  'User-Agent': 'nodejs',
+                },
+                formData: {
+                    'token': '+\\',
+                    'data': JSON.stringify(buildRawWikidataObject(editObj))
+                },
+                timeout: 120000
+            };
+
+            request(endpointWikidata, function(err,res,body){
+                if (err) {
+                    console.log("Error editing item:\n\n", err);
+                    updated(false);
+                } else {
+                    if (body.error !== undefined && body.error !== null) {
+                        console.log("Error creating item:\n\n", body.error);
+                        updated(false);
+                    } else {
+                        console.log("Item succesfully edited!")
+                        updated(true);
+                    }
+                }
+            })
+
+        });
+
+    });
+}
+
+var anonymousCreateNewItem = function(object, created) {
+
+    let rawObject = buildRawWikidataObject(object.claims);
+
+    console.log(JSON.stringify(rawObject, null, 2));
+
+    let endpointWikidata = {
+        method: 'POST',
+        url: 'https://www.wikidata.org/w/api.php?action=wbeditentity&format=json&languages=it&new=item',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'User-Agent': 'nodejs',
+        },
+        formData: {
+            'token': '+\\',
+            'data': JSON.stringify()
+        },
+        timeout: 120000
+    };
+
+    request(endpointWikidata, function(err, res, body){
+        if (err) {
+            console.log("Error creating item:\n\n", err);
+            created(false);
+        } else {
+            if (body.error !== undefined && body.error !== null) {
+                console.log("Error creating item:\n\n", body.error);
+                created(false);
+            } else {
+                console.log("Item succesfully created!");
+                created(true);
+            }
+        }
+    })
+}
