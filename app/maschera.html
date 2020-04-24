@@ -95,10 +95,14 @@
       </div>
       <div class="field">
         <label>Tipologia</label>
-        <select class="ui fluid dropdown">
+        <select id="tipologia" class="ui fluid dropdown">
           <option value="">Tipologia</option>
-          <option value="AL">museo</option>
-          <option value="AK">monumento</option>
+          <option value="Q16970">Chiesa</option>
+          <option value="Q33506">Museo</option>
+          <option value="Q16560">Palazzo</option>
+          <option value="Q4989906">Monumento</option>
+          <option value="Q41176">Edificio</option>
+          <option value="">Altro</option>
         </select>
       </div>
       <div class="field">
@@ -111,9 +115,11 @@
       </div>
       <div class="field">
         <label>Indirizzo stradale</label>
-        <input type="text" name="indirizzo" placeholder="Indirizzo con nome via e numero civico (e.g. Via Roma, 123)">
+        <input type="text" name="indirizzo" placeholder="Indirizzo con nome via e numero civico (e.g. Via Roma, 123) e poi premi il tasto invio">
       </div>
+      <p>La mappa si aggiorna dinamicamente sulla base dei campi Comune e Indirizzo.</p>
       <div id="mapid"></div>
+      <p>Le coordinate si settano cliccando sulla mappa sul punto desiderato.</p>
       <div class="two fields">
         <div class="disabled field">
           <label>Latitudine</label>
@@ -129,19 +135,24 @@
         <input type="text" name="sito-web" placeholder="Sito web che riguarda il bene (se esiste)">
       </div>
       <div class="field">
-        <label>Parte del monumento coinvolta nell'autorizzazione</label>
-        <select class="ui fluid dropdown">
-          <option value="">Parte coinvolta</option>
-          <option value="AL">esteriore</option>
-          <option value="AK">facciata</option>
+        <label>Parte del monumento coinvolta nell'autorizzazione (da usare solo per particolari restrizioni)</label>
+        <select id="parte_coinvolta" class="ui fluid dropdown">
+          <option value="">Tutto il monumento</option>
+          <option value="Q1385033">Esteriore</option>
+          <option value="Q183061">Facciata</option>
+          <option value="Q2998430">Interiore</option>
+          <option value="Q57346">Mura</option>
+          <option value="Q1107656">Giardino</option>
+          <option value="Q41176">Edificio</option>
+          <option value="Q1430154">Chiostro</option>
         </select>
       </div>
     </form>
 
     <br>
-    <p>Cliccando il tasto accetto termini e condizioni di Wikidata e mi assumo la
+    <p>Cliccando il tasto <a href="https://foundation.wikimedia.org/wiki/Terms_of_Use/it">accetto termini e condizioni</a> e mi assumo la
     responsabilità della veridicità delle informazioni.</p>
-    <button class="ui primary button" id="sendMaschera">Invia a Wikidata!</button>
+    <button class="ui primary button" id="sendMaschera">Salva!</button>
 
   </div>
 

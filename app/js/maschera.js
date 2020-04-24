@@ -48,6 +48,17 @@ $.ajax({
     }
 });
 
+$.ajax({
+    type: "GET",
+    url: `/api/ente`,
+    success: function(ente) {
+        if (ente) mainObject.entity.claims.P790 = ente;
+    },
+    error: function(data) {
+
+    }
+});
+
 
 document.getElementById("sendMaschera").addEventListener("click", function () {
   let label = $("input[name=label]").val();
@@ -60,10 +71,10 @@ document.getElementById("sendMaschera").addEventListener("click", function () {
       mainObject.entity.description = descrizione;
   }
 
-  /*let tipologia = $("input[name=tipologia]").val();
+  let tipologia = $('#tipologia').find(":selected").val();
   if (tipologia) {
       mainObject.entity.claims.P31 = tipologia;
-  }*/
+  }
 
   mainObject.entity.claims.P17 = "Q38";
   let comune = $('.ui.search').search('get result', $("input[name=comune]").val());
@@ -82,14 +93,28 @@ document.getElementById("sendMaschera").addEventListener("click", function () {
 
   let indirizzo = $("input[name=indirizzo]").val();
   if (indirizzo) {
-      mainObject.entity.P6375 = {};
-      mainObject.entity.P6375.text = indirizzo;
-      mainObject.entity.P6375.language = "it";
+      mainObject.entity.claims.P6375 = {};
+      mainObject.entity.claims.P6375.text = indirizzo;
+      mainObject.entity.claims.P6375.language = "it";
   }
 
   let website = $("input[name=sito-web]").val();
   if (website) {
-      mainObject.entity.P856 = website;
+      mainObject.entity.claims.P856 = website;
+  }
+
+  //bene immobile italiano
+  mainObject.entity.claims.P1435 = "Q26971668";
+
+  mainObject.entity.claims.P2186 = {};
+  mainObject.entity.claims.P2186.qualifiers = {};
+  let date = new Date();
+  //data odierna
+  mainObject.entity.claims.P2186.qualifiers.P580 = date.toISOString().substring(0, 10);
+  //parte coinvolta
+  let parte_coinvolta = $('#parte_coinvolta').find(":selected").val();
+  if (parte_coinvolta) {
+      mainObject.entity.claims.P2186.qualifiers.P518 = parte_coinvolta;
   }
 
   console.log(mainObject);

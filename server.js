@@ -132,7 +132,8 @@ app.post('/api/upload', async function (req, res) {
     const upload = req.files.upload;
     try {
         const folder = await nextcloud.getFolder("/");
-        await folder.createFile(Date.now() + "-" + upload.name, upload.data);
+        let ente = req.session.ente || "altro_ente";
+        await folder.createFile(ente + "-" + Date.now() + "-" + upload.name, upload.data);
         res.status(200).send();
     } catch {
         res.status(500).send();
