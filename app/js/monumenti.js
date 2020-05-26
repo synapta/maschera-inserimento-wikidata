@@ -5,12 +5,12 @@ $('.ui.search')
     },
     fields: {
       results : 'search',
-      title   : 'label',
-      description: 'description'
+      title   : 'titlesnippet',
+      description: 'snippet'
     },
     minCharacters : 3,
     onSelect: function(res, resp) {
-        window.location.href = `/maschera?id=${res.id}`;
+        window.location.href = `/maschera?id=${res.title}`;
     }
   })
 ;
@@ -29,7 +29,7 @@ $.ajax({
             t.label === thing.label && t.id === thing.id
           ))
         )
-        
+
         if (array.length > 0) {
             $("#monumentList").append(`<ul>`)
             for (let i = 0; i < array.length; i++) {

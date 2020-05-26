@@ -373,7 +373,8 @@ exports.editItem = function (object, user, updated) {
 var simpleWikidataSuggestion = function(string, cb) {
    let endpointWikidata = {
        method: 'GET',
-       url: `https://www.wikidata.org/w/api.php?action=wbsearchentities&search=${string}&format=json&errorformat=plaintext&language=it&uselang=it&type=item`,
+       //url: `https://www.wikidata.org/w/api.php?action=wbsearchentities&search=${string}&format=json&errorformat=plaintext&language=it&uselang=it&type=item`,
+       url: `https://www.wikidata.org/w/api.php?action=query&list=search&srsearch=${string}&srprop=titlesnippet|snippet&uselang=it&format=json`,
        headers: {
          'Accept': 'application/json',
          'User-Agent': 'nodejs'

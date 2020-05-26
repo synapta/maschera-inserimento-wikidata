@@ -213,10 +213,11 @@ app.get('/api/suggestion/generic', function (req, res) {
             if (result.error) {
                 res.status(404).send("Not Found");
             } else {
-                result.search = result.search.filter(function (item) {
+                /*result.search = result.search.filter(function (item) {
                     delete item.url;
                     return true;
-                });
+                });*/
+                result.search = result.query.search;
                 res.status(200).send(result);
             }
         } else {
