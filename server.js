@@ -76,6 +76,7 @@ app.use(passport.initialize());
 app.use(passport.session());
 app.use(fileUpload());
 app.use(morgan('common'));
+app.use( bodyParser.urlencoded({ extended: true }) );
 app.use(bodyParser.json());
 
 // TODO remove when callback is set properly
@@ -101,7 +102,7 @@ app.get('/logout', function (req, res) {
     delete req.session.ente;
     delete req.session.list;
     req.logout();
-    res.redirect('/the-end');
+    res.redirect('/anagrafica');
 });
 
 app.get('/login/noauth', passport.authenticate('anonymous'), function (req, res) {
@@ -160,6 +161,10 @@ app.get('/the-end', function (req, res) {
     res.sendFile(__dirname + '/app/grazie.html');
 });
 
+app.get('/anagrafica', function (req, res) {
+    res.sendFile(__dirname + '/app/anagrafica.html');
+});
+
 app.get('/api/list', ensureAuthenticated, function (req, res) {
     res.json(req.session.list);
 });
@@ -177,10 +182,27 @@ app.post('/api/upload', ensureAuthenticated, async function (req, res) {
             target: upload.name
         });
         res.status(200).send();
-    } catch {
+    } catch (err) {
+        console.log(err);
         res.status(500).send();
     }
 });
+
+app.post('/api/anagrafica/send', async function (req, res) {
+    try {
+        const file = await nextcloud.getFile("/Autorizzazioni WLM tool/Anagrafica/anagrafica.csv");
+        const buffer = await file.getContent();
+        const folder = await nextcloud.getFolder("/Autorizzazioni WLM tool/Anagrafica");
+        await file.delete();
+        const value = buffer.toString() + '\n' + req.body.nome + "," + req.body.cognome
+        + "," + req.body.ente + "," + req.body.mail + "," + req.body.telefono;
+        await folder.createFile("anagrafica.csv", value);
+        res.status(200).send();
+    } catch (err) {
+        console.log(err);
+        res.status(500).send();
+    }
+})
 
 app.get('/api/ente', ensureAuthenticated, function (req, res) {
     res.json(req.session.ente);
