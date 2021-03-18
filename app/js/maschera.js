@@ -5,6 +5,8 @@ const url = new URL(window.location.href);
 const id = url.searchParams.get("id");
 
 mainObject.entity.id = id;
+mainObject.entity.claims.P2186 = {};
+mainObject.entity.claims.P2186.qualifiers = {};
 
 $.ajax({
     type: "GET",
@@ -52,7 +54,7 @@ $.ajax({
     type: "GET",
     url: `/api/ente`,
     success: function(ente) {
-        if (ente) mainObject.entity.claims.P790 = ente;
+        if (ente) mainObject.entity.claims.P2186.qualifiers.P790 = ente;
     },
     error: function(data) {
 
@@ -106,8 +108,6 @@ document.getElementById("sendMaschera").addEventListener("click", function () {
   //bene immobile italiano
   mainObject.entity.claims.P1435 = "Q26971668";
 
-  mainObject.entity.claims.P2186 = {};
-  mainObject.entity.claims.P2186.qualifiers = {};
   let date = new Date();
   //data odierna
   mainObject.entity.claims.P2186.qualifiers.P580 = date.toISOString().substring(0, 10);
