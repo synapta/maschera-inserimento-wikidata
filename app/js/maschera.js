@@ -6,6 +6,7 @@ const id = url.searchParams.get("id");
 
 mainObject.entity.id = id;
 mainObject.entity.claims.P2186 = {};
+mainObject.entity.claims.P2186.snaktype = "somevalue";
 mainObject.entity.claims.P2186.qualifiers = {};
 
 $.ajax({
@@ -75,13 +76,17 @@ document.getElementById("sendMaschera").addEventListener("click", function () {
 
   let tipologia = $('#tipologia').find(":selected").val();
   if (tipologia) {
-      mainObject.entity.claims.P31 = tipologia;
+      mainObject.entity.claims.P31 = {};
+      mainObject.entity.claims.P31.value = tipologia;
+      mainObject.entity.claims.P31.references = [{ P143: 'Q19960422'}];
   }
 
   mainObject.entity.claims.P17 = "Q38";
   let comune = $('.ui.search').search('get result', $("input[name=comune]").val());
   if (comune) {
-      mainObject.entity.claims.P131 = comune.id;
+      mainObject.entity.claims.P131 = {};
+      mainObject.entity.claims.P131.value = comune.id;
+      mainObject.entity.claims.P131.references = [{ P143: 'Q19960422'}];
   }
 
   let lat = $("input[name=lat]").val();
@@ -91,6 +96,7 @@ document.getElementById("sendMaschera").addEventListener("click", function () {
       mainObject.entity.claims.P625.latitude = parseFloat(lat);
       mainObject.entity.claims.P625.longitude = parseFloat(long);
       mainObject.entity.claims.P625.precision = 0.0001;
+      mainObject.entity.claims.P625.references = [{ P143: 'Q19960422'}];
   }
 
   let indirizzo = $("input[name=indirizzo]").val();
@@ -98,15 +104,20 @@ document.getElementById("sendMaschera").addEventListener("click", function () {
       mainObject.entity.claims.P6375 = {};
       mainObject.entity.claims.P6375.text = indirizzo;
       mainObject.entity.claims.P6375.language = "it";
+      mainObject.entity.claims.P6375.references = [{ P143: 'Q19960422'}];
   }
 
   let website = $("input[name=sito-web]").val();
   if (website) {
-      mainObject.entity.claims.P856 = website;
+      mainObject.entity.claims.P856 = {};
+      mainObject.entity.claims.P856.value = website;
+      mainObject.entity.claims.P856.references = [{ P143: 'Q19960422'}];
   }
 
   //bene immobile italiano
-  mainObject.entity.claims.P1435 = "Q26971668";
+  mainObject.entity.claims.P1435 = {};
+  mainObject.entity.claims.P1435.value = "Q26971668";
+  mainObject.entity.claims.P1435.references = [{ P143: 'Q19960422'}];
 
   let date = new Date();
   //data odierna
@@ -116,6 +127,7 @@ document.getElementById("sendMaschera").addEventListener("click", function () {
   if (parte_coinvolta) {
       mainObject.entity.claims.P2186.qualifiers.P518 = parte_coinvolta;
   }
+  mainObject.entity.claims.P2186.references = [{ P143: 'Q19960422'}];
 
   console.log(mainObject);
 

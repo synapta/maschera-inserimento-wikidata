@@ -147,8 +147,7 @@ exports.createNewItem = function (object, user, created) {
     wbEdit.entity.create({
         descriptions: { it: object.description},
         labels: { it: object.label},
-        claims: object.claims,
-        references: [{ P143: 'Q19960422'}]
+        claims: object.claims
     }, requestConfig).then(re => {
         if (re.success) {
             console.log("Created!");
@@ -191,7 +190,7 @@ function filterProperties(propName, wdProp, curProp) {
     //                   ↑match     ↑match     ↑no match
     //
     //  ==> result = ["Q1107656"]
-    for (let i = 0; i<curValueArr.length; i++) {
+    for (let i = 0; i < curValueArr.length; i++) {
         let curResult;
         let curValue = curValueArr[i];
 
@@ -208,12 +207,15 @@ function filterProperties(propName, wdProp, curProp) {
                 }
                 break;
             case 'P2186':
-                if (wdValue.includes(curValue.value)) {
+                /*if (wdValue.includes(curValue.value)) {
                     if (curProp.qualifiers && curProp.qualifiers.P580) {
-                        let wdQual = undefined, index = wdValue.indexOf(curValue.value);
+                        let wdQual = undefined;
+                        const index = wdValue.indexOf(curValue.value);
+
                         if (wdProp[index].qualifiers && wdProp[index].qualifiers.P580) {
                             wdQual = wbk.simplify.propertyQualifiers(wdProp[index].qualifiers.P580)[0].split("T")[0];
                         }
+
                         if (wdQual === undefined) {
                             curResult = false;
                         } else {
@@ -222,11 +224,18 @@ function filterProperties(propName, wdProp, curProp) {
                     }
                 } else {
                     curResult = false;
-                }
+                }*/
+                curResult = true;
+                if (!wdValue) curResult = false;
                 break;
             default:
                 curResult = wdValue.includes(curValue);
         }
+        //try also .value
+        if (!curResult) {
+            curResult = wdValue.includes(curValue.value);
+        }
+
         if (!curResult) {
             // if the current value of the property does not match (= there is no
             // property in wikidata with that value), add it to the returned object
@@ -247,29 +256,22 @@ function filterProperties(propName, wdProp, curProp) {
  * @return {object}           filtered object.
  */
 function removeDuplicates(wdObj, obj, cb) {
-    let totalKeys = Object.keys(obj).length;
+    const totalKeys = Object.keys(obj).length;
     let currKey = 0;
     let newObj = {};
 
     // iterate over all the properties of the request body
     for (var k in obj) {
-        if (k === 'P2186' && obj[k].value === undefined) {
-            newObj[k] = obj[k];
-            newObj[k].snaktype = "somevalue";
-            if (++currKey === totalKeys) {
-                cb(newObj);
-            } else {
-                continue;
-            }
-        }
         if (!Object.keys(wdObj).includes(k)) {
+            console.log(k + " kept, not already in!");
             newObj[k] = obj[k];
         } else {
-            let resArray = filterProperties(k, wdObj[k], obj[k]);
+            const resArray = filterProperties(k, wdObj[k], obj[k]);
 
             // add to the filtered body only if the result is not empty
             if (resArray.length > 0) {
                 newObj[k] = resArray;
+                console.log(k + " kept, new value!");
             }
         }
         if (++currKey === totalKeys) {
@@ -322,8 +324,7 @@ exports.editItem = function (object, user, updated) {
                 console.log("Updating...");
                 wbEdit.entity.edit({
                   id: object.id,
-                  claims: editObj,
-                  references: [{ P143: 'Q19960422'}]
+                  claims: editObj
               }, requestConfig).then(re => {
                     if (re.success) {
                         updated(true);
