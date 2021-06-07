@@ -174,7 +174,7 @@ app.post('/api/upload', ensureAuthenticated, async function (req, res) {
     try {
         const folder = await nextcloud.getFolder("/Autorizzazioni WLM tool");
         let ente = req.session.ente || "altro_ente";
-        await folder.createFile(ente + "-" + Date.now() + "-" + upload.name, upload.data);
+        await folder.createFile(ente + "-" + Date.now() + "-" + encodeURIComponent(upload.name), upload.data);
         logger.log({
             level: 'info',
             action: 'upload',
