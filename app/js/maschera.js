@@ -62,8 +62,9 @@ $.ajax({
     }
 });
 
-
 document.getElementById("sendMaschera").addEventListener("click", function () {
+  $('.ui.basic.modal').modal('show');
+
   let label = $("input[name=label]").val();
   if (label) {
       mainObject.entity.label = label;
