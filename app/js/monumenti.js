@@ -19,6 +19,12 @@ $( "#addMonuButton" ).click(function() {
     $("#fase2").show();
 });
 
+$( "#finButton" ).click(function(e) {
+  e.preventDefault();
+  window.open('/download');
+  window.location = '/logout';
+});
+
 $.ajax({
     type: "GET",
     url: "/api/list",

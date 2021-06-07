@@ -2,11 +2,13 @@ require('dotenv').config();
 
 const express = require('express');
 const session = require('express-session');
-const MemoryStore = require('memorystore')(session)
+const MemoryStore = require('memorystore')(session);
 const morgan = require('morgan');
+const moment = require('moment');
 const request = require('request');
 const passport = require('passport');
 const bodyParser = require('body-parser');
+const PDFDocument = require('pdfkit');
 const MediaWikiStrategy = require('passport-mediawiki-oauth').OAuthStrategy;
 const AnonymousStrategy = require('passport-anonymous').Strategy;
 
@@ -79,7 +81,6 @@ app.use(morgan('common'));
 app.use( bodyParser.urlencoded({ extended: true }) );
 app.use(bodyParser.json());
 
-// TODO remove when callback is set properly
 app.get('/', function (req, res, next) {
     if (req.query.oauth_verifier && req.query.oauth_token) {
         res.redirect('/auth/mediawiki/callback?oauth_verifier=' + req.query.oauth_verifier + '&oauth_token=' + req.query.oauth_token);
@@ -96,6 +97,24 @@ function ensureAuthenticated(req, res, next) {
     }
     res.redirect('/login?error');
 }
+
+app.get('/download', ensureAuthenticated, function (req, res) {
+    const ente = req.session.ente ? req.session.ente : 'in oggetto';
+    const doc = new PDFDocument();
+
+    doc.fontSize(14);
+    doc.text('Gentile utente, la sua richiesta relativa all\'autorizzazione a fotografare i monumenti posti sotto la tutela dell\'ente ' + ente + ' durante il concorso WikiLovesMonuments è stata acquisita correttamente.');
+    doc.text('\n');
+    doc.text('Di seguito si elencano i monumenti autorizzati:')
+    doc.list(req.session.list ? req.session.list.map(e => e.label + ' (' + e.id + ')') : [], { indent: 15 });
+    doc.text('\n');
+    doc.text(moment().format('L') + ',')
+    doc.text('Wikimedia Italia')
+    doc.end();
+
+    res.header("Content-Disposition", "attachment;filename=Ricevuta.pdf");
+    doc.pipe(res);
+});
 
 app.get('/logout', function (req, res) {
     delete req.session.username;
@@ -235,10 +254,6 @@ app.get('/api/suggestion/generic', function (req, res) {
             if (result.error) {
                 res.status(404).send("Not Found");
             } else {
-                /*result.search = result.search.filter(function (item) {
-                    delete item.url;
-                    return true;
-                });*/
                 result.search = result.query.search;
                 res.status(200).send(result);
             }
