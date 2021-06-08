@@ -370,6 +370,11 @@ app.get('/api/registro', function (req, res) {
     res.json(rows);
 });
 
+// Error handler
+app.use(function (err, req, res, next) {
+    res.redirect('/login?error');
+});
+
 let port = 8080;
 
 if (process.argv.length > 2) {
