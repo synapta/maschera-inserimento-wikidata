@@ -108,7 +108,7 @@ app.get('/download', ensureAuthenticated, function (req, res) {
     doc.text('Di seguito si elencano i monumenti autorizzati:')
     doc.list(req.session.list ? req.session.list.map(e => e.label + ' (' + e.id + ')') : [], { indent: 15 });
     doc.text('\n');
-    doc.text(moment().format('L') + ',')
+    doc.text(moment().format('DD/MM/Y') + ',')
     doc.text('Wikimedia Italia')
     doc.end();
 
