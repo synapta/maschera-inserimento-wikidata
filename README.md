@@ -78,7 +78,7 @@ https://wiki.wikimedia.it/wiki/Infrastruttura
 
 Copyright (C) 2020, 2021 [Synapta](https://synapta.it/)
 
-Copyright (C) 2022 [rispettivi contributori](https://gitlab.wikimedia.org/valeriobozzolan/wlm-sito-autorizzazioni/-/commits/master/)
+Copyright (C) 2022 [rispettivi contributori](https://gitlab.wikimedia.org/repos/wikimedia-it/wlm/wlm-sito-autorizzazioni/-/commits/main)
 
 Questo programma è software libero: puoi ridistribuirlo e/o modificarlo
 seguendo i termini della GNU General Public License pubblicata
